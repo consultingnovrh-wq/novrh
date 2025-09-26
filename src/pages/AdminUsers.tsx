@@ -59,6 +59,7 @@ import { useToast } from "@/hooks/use-toast";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
 import UserDetailsModal from "@/components/UserDetailsModal";
+import AddUserModal from "@/components/AddUserModal";
 
 // Types pour les données
 interface User {
@@ -117,6 +118,7 @@ const AdminUsers = () => {
   // États pour les modales
   const [showUserDetails, setShowUserDetails] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showAddUser, setShowAddUser] = useState(false);
   
   // États pour les statistiques
   const [stats, setStats] = useState({
@@ -467,6 +469,14 @@ const AdminUsers = () => {
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Actualiser
                   </Button>
+                  <Button 
+                    onClick={() => setShowAddUser(true)} 
+                    size="sm"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nouvel utilisateur
+                  </Button>
                   <Button variant="outline" size="sm">
                     <Download className="w-4 h-4 mr-2" />
                     Exporter
@@ -754,6 +764,13 @@ const AdminUsers = () => {
         isOpen={showUserDetails}
         onClose={() => setShowUserDetails(false)}
         user={selectedUser}
+      />
+
+      {/* Add User Modal */}
+      <AddUserModal
+        isOpen={showAddUser}
+        onClose={() => setShowAddUser(false)}
+        onUserAdded={loadUsers}
       />
     </div>
   );

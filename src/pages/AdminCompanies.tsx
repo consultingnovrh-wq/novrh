@@ -2,219 +2,355 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Building2, 
-  CheckCircle, 
-  Clock, 
-  Star, 
-  BarChart3,
   Search, 
-  Plus, 
-  Edit, 
-  Trash2, 
+  Filter, 
+  Download, 
+  Upload, 
+  Plus,
+  Edit,
+  Trash2,
   Eye,
-  TrendingUp,
-  Users,
-  MapPin,
+  CheckCircle,
+  XCircle,
+  MoreHorizontal,
+  Mail,
   Phone,
-  Globe,
-  FileText
+  Calendar,
+  MapPin,
+  RefreshCw,
+  ArrowUpDown
 } from "lucide-react";
+import { useAdminSystem } from "@/hooks/use-admin-system";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
 
-const AdminCompanies = () => {
-  const [companies, setCompanies] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+// Types pour les données
+interface Company {
+  id: string;
+  user_id: string;
+  company_name: string;
+  company_address: string;
+  nif_matricule: string;
+  is_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
-  // Données de démonstration pour les statistiques
+interface CompanyProfile {
+  id: string;
+  user_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  is_active: boolean;
+  email_verified: boolean;
+  created_at: string;
+}
+
+const AdminCompanies = () => {
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [profiles, setProfiles] = useState<CompanyProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [currentRole, setCurrentRole] = useState<any>(null);
+  const [permissions, setPermissions] = useState<Record<string, boolean>>({});
+  
+  // États pour les filtres et recherche
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  // États pour les statistiques
   const [stats, setStats] = useState({
     totalCompanies: 0,
     verifiedCompanies: 0,
-    pendingVerification: 0,
-    premiumCompanies: 0,
-    activeCompanies: 0,
-    totalEmployees: 0
+    pendingCompanies: 0,
+    activeCompanies: 0
   });
 
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const {
+    checkIsAdmin,
+    getCurrentAdminRole,
+    hasPermission,
+    logAction
+  } = useAdminSystem();
+
   useEffect(() => {
-    loadCompanies();
-    loadStats();
-  }, []);
+    let isInitialized = false;
+    
+    const checkUser = async () => {
+      if (isInitialized) return;
+      
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+
+        setUser(user);
+
+        // Vérifier si l'utilisateur est admin
+        const adminStatus = await checkIsAdmin();
+        setIsAdmin(adminStatus);
+
+        if (!adminStatus) {
+          navigate('/dashboard');
+          return;
+        }
+
+        // Charger le rôle de l'admin
+        const role = await getCurrentAdminRole();
+        setCurrentRole(role);
+
+        // Charger les permissions
+        await loadPermissions();
+
+        // Charger les données
+        await loadCompanies();
+
+        isInitialized = true;
+
+      } catch (error) {
+        console.error('Error checking user:', error);
+        navigate('/dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+  }, [navigate]);
+
+  const loadPermissions = async () => {
+    try {
+      const permissionKeys = ['companies', 'users', 'jobs', 'candidates', 'settings', 'reports', 'roles'];
+      const permissionStates: Record<string, boolean> = {};
+      
+      for (const permission of permissionKeys) {
+        permissionStates[permission] = await hasPermission(permission);
+      }
+      
+      setPermissions(permissionStates);
+    } catch (error) {
+      console.error('Error loading permissions:', error);
+    }
+  };
 
   const loadCompanies = async () => {
     try {
-      setLoading(true);
-      
-      // Charger les entreprises depuis Supabase
-      const { data: companiesData, error } = await supabase
+      // Charger les entreprises
+      const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select(`
-          *,
-          profiles (email, user_id, is_active)
-        `);
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        throw error;
+      if (companiesError) {
+        console.error('Error loading companies:', companiesError);
+        throw companiesError;
       }
 
-      if (companiesData) {
-        setCompanies(companiesData);
+      setCompanies(companiesData || []);
+
+      // Charger les profils des entreprises
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_type', 'company')
+        .order('created_at', { ascending: false });
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError);
       }
-    } catch (error) {
+
+      setProfiles(profilesData || []);
+
+      // Calculer les statistiques
+      const totalCompanies = companiesData?.length || 0;
+      const verifiedCompanies = companiesData?.filter(c => c.is_verified).length || 0;
+      const pendingCompanies = companiesData?.filter(c => !c.is_verified).length || 0;
+      const activeCompanies = profilesData?.filter(p => p.is_active).length || 0;
+
+      setStats({
+        totalCompanies,
+        verifiedCompanies,
+        pendingCompanies,
+        activeCompanies
+      });
+
+    } catch (error: any) {
       console.error('Error loading companies:', error);
-      // Utiliser des données de démonstration si pas de table
-      setCompanies(generateDemoCompanies());
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadStats = () => {
-    // Calculer les statistiques
-    const totalComps = companies.length;
-    const verifiedComps = companies.filter(comp => comp.is_verified).length;
-    const pendingComps = companies.filter(comp => !comp.is_verified).length;
-    const premiumComps = companies.filter(comp => comp.is_premium).length;
-    const activeComps = companies.filter(comp => comp.profiles?.is_active).length;
-    const totalEmps = companies.reduce((sum, comp) => sum + (comp.employee_count || 0), 0);
-
-    setStats({
-      totalCompanies: totalComps,
-      verifiedCompanies: verifiedComps,
-      pendingVerification: pendingComps,
-      premiumCompanies: premiumComps,
-      activeCompanies: activeComps,
-      totalEmployees: totalEmps
-    });
-  };
-
-  const generateDemoCompanies = () => {
-    return [
-      {
-        id: 1,
-        company_name: 'Tech Solutions SARL',
-        company_address: '123 Rue de l\'Innovation, Bamako',
-        phone: '+223 20 12 34 56',
-        website: 'www.techsolutions.ml',
-        industry: 'Technologie',
-        employee_count: 25,
-        is_verified: true,
-        is_premium: true,
-        description: 'Entreprise leader dans le développement de solutions technologiques',
-        profiles: { email: 'contact@techsolutions.ml', user_id: 'user1', is_active: true }
-      },
-      {
-        id: 2,
-        company_name: 'Agro Business Mali',
-        company_address: '456 Avenue du Commerce, Sikasso',
-        phone: '+223 21 23 45 67',
-        website: 'www.agrobusiness.ml',
-        industry: 'Agriculture',
-        employee_count: 150,
-        is_verified: false,
-        is_premium: false,
-        description: 'Spécialisée dans l\'agriculture durable et l\'export',
-        profiles: { email: 'info@agrobusiness.ml', user_id: 'user2', is_active: true }
-      },
-      {
-        id: 3,
-        company_name: 'Mining Corp Mali',
-        company_address: '789 Boulevard des Mines, Kayes',
-        phone: '+223 22 34 56 78',
-        website: 'www.miningcorp.ml',
-        industry: 'Mines',
-        employee_count: 500,
-        is_verified: true,
-        is_premium: true,
-        description: 'Exploitation minière et transformation des minerais',
-        profiles: { email: 'contact@miningcorp.ml', user_id: 'user3', is_active: true }
+      
+      let errorMessage = "Impossible de charger les entreprises.";
+      if (error.message) {
+        errorMessage = `Erreur: ${error.message}`;
       }
-    ];
-  };
-
-  const filteredCompanies = companies.filter(company => {
-    const matchesSearch = 
-      company.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.industry?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.company_address?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.profiles?.email?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    let matchesFilter = true;
-    if (filterStatus === 'verified') matchesFilter = company.is_verified;
-    else if (filterStatus === 'pending') matchesFilter = !company.is_verified;
-    else if (filterStatus === 'premium') matchesFilter = company.is_premium;
-    else if (filterStatus === 'active') matchesFilter = company.profiles?.is_active;
-    
-    return matchesSearch && matchesFilter;
-  });
-
-  const getStatusBadge = (company: any) => {
-    if (!company.profiles?.is_active) {
-      return { label: 'Inactive', variant: 'secondary' as const, color: 'bg-gray-100 text-gray-800' };
+      
+      toast({
+        title: "Erreur",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      
+      setCompanies([]);
+      setProfiles([]);
+      setStats({
+        totalCompanies: 0,
+        verifiedCompanies: 0,
+        pendingCompanies: 0,
+        activeCompanies: 0
+      });
     }
-    if (!company.is_verified) {
-      return { label: 'En attente', variant: 'secondary' as const, color: 'bg-yellow-100 text-yellow-800' };
-    }
-    if (company.is_premium) {
-      return { label: 'Premium', variant: 'default' as const, color: 'bg-purple-100 text-purple-800' };
-    }
-    return { label: 'Vérifiée', variant: 'default' as const, color: 'bg-green-100 text-green-800' };
   };
 
   const handleCompanyAction = async (companyId: string, action: string) => {
     try {
       switch (action) {
         case 'verify':
-          // Vérifier l'entreprise
-          toast({
-            title: "Succès",
-            description: "Entreprise vérifiée avec succès",
-          });
+          await supabase
+            .from('companies')
+            .update({ is_verified: true })
+            .eq('id', companyId);
           break;
-        case 'premium':
-          // Passer en premium
-          toast({
-            title: "Succès",
-            description: "Entreprise passée en premium",
-          });
+        case 'unverify':
+          await supabase
+            .from('companies')
+            .update({ is_verified: false })
+            .eq('id', companyId);
           break;
-        case 'suspend':
-          // Suspendre l'entreprise
-          toast({
-            title: "Succès",
-            description: "Entreprise suspendue avec succès",
-          });
+        case 'activate':
+          const company = companies.find(c => c.id === companyId);
+          if (company) {
+            await supabase
+              .from('profiles')
+              .update({ is_active: true })
+              .eq('user_id', company.user_id);
+          }
           break;
-        case 'delete':
-          // Supprimer l'entreprise
-          if (confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ?')) {
-            toast({
-              title: "Succès",
-              description: "Entreprise supprimée avec succès",
-            });
+        case 'deactivate':
+          const company2 = companies.find(c => c.id === companyId);
+          if (company2) {
+            await supabase
+              .from('profiles')
+              .update({ is_active: false })
+              .eq('user_id', company2.user_id);
           }
           break;
       }
       
-      loadCompanies(); // Recharger la liste
+      await loadCompanies();
+      await logAction(action, 'company', { company_id: companyId });
+      
+      toast({
+        title: "Action effectuée",
+        description: `L'entreprise a été ${action === 'verify' ? 'vérifiée' : action === 'unverify' ? 'non vérifiée' : action === 'activate' ? 'activée' : 'désactivée'}.`,
+      });
     } catch (error) {
-      console.error('Error performing company action:', error);
+      console.error('Error handling company action:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de modifier l'entreprise",
-        variant: "destructive",
+        description: "Une erreur est survenue lors de l'action.",
+        variant: "destructive"
       });
     }
+  };
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const filteredCompanies = companies.filter(company => {
+    const profile = profiles.find(p => p.user_id === company.user_id);
+    const matchesSearch = company.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         company.nif_matricule?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         profile?.email.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatusFilter = statusFilter === 'all' || 
+                               (statusFilter === 'verified' && company.is_verified) ||
+                               (statusFilter === 'pending' && !company.is_verified) ||
+                               (statusFilter === 'active' && profile?.is_active) ||
+                               (statusFilter === 'inactive' && !profile?.is_active);
+    
+    return matchesSearch && matchesStatusFilter;
+  });
+
+  const sortedCompanies = [...filteredCompanies].sort((a, b) => {
+    let aValue: any;
+    let bValue: any;
+    
+    switch (sortBy) {
+      case 'company_name':
+        aValue = a.company_name;
+        bValue = b.company_name;
+        break;
+      case 'created_at':
+        aValue = new Date(a.created_at);
+        bValue = new Date(b.created_at);
+        break;
+      default:
+        aValue = a[sortBy as keyof Company];
+        bValue = b[sortBy as keyof Company];
+    }
+    
+    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const handleLogout = async () => {
+    await logAction('logout', 'session');
+    await supabase.auth.signOut();
+    navigate('/login');
   };
 
   if (loading) {
@@ -228,6 +364,10 @@ const AdminCompanies = () => {
     );
   }
 
+  if (!user || !isAdmin) {
+    return null;
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
@@ -236,265 +376,317 @@ const AdminCompanies = () => {
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
       />
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <AdminHeader 
           onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           isSidebarCollapsed={isSidebarCollapsed}
+          user={user}
+          currentRole={currentRole}
+          onLogout={handleLogout}
         />
 
-        {/* Main content area */}
+        {/* Main content */}
         <main className="flex-1 overflow-y-auto p-6">
-          {/* Page Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Gestion des Entreprises</h1>
-              <p className="text-gray-600">Gérez tous les partenaires entreprises de la plateforme</p>
-            </div>
-            <Button className="flex items-center space-x-2">
-              <Plus className="w-4 h-4" />
-              <span>Nouvelle entreprise</span>
-            </Button>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Entreprises</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalCompanies}</div>
-                <p className="text-xs text-muted-foreground">Toutes entreprises</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Vérifiées</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">{stats.verifiedCompanies}</div>
-                <p className="text-xs text-muted-foreground">Approuvées</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">En Attente</CardTitle>
-                <Clock className="h-4 w-4 text-yellow-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{stats.pendingVerification}</div>
-                <p className="text-xs text-muted-foreground">À vérifier</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Premium</CardTitle>
-                <Star className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-600">{stats.premiumCompanies}</div>
-                <p className="text-xs text-muted-foreground">Plans premium</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Actives</CardTitle>
-                <Users className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{stats.activeCompanies}</div>
-                <p className="text-xs text-muted-foreground">Comptes actifs</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Employés</CardTitle>
-                <Users className="h-4 w-4 text-indigo-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-indigo-600">{stats.totalEmployees}</div>
-                <p className="text-xs text-muted-foreground">Tous secteurs</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Filters and Search */}
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Rechercher une entreprise..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
+          <div className="max-w-7xl mx-auto">
+            {/* Page Header */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Gestion des Entreprises</h1>
+                  <p className="text-gray-600 mt-2">
+                    Gérez toutes les entreprises de la plateforme
+                  </p>
                 </div>
-                
-                <div className="flex gap-2">
-                  <Button
-                    variant={filterStatus === 'all' ? 'default' : 'outline'}
-                    onClick={() => setFilterStatus('all')}
-                  >
-                    Toutes
+                <div className="flex items-center space-x-3">
+                  <Button onClick={loadCompanies} variant="outline" size="sm">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Actualiser
                   </Button>
-                  <Button
-                    variant={filterStatus === 'verified' ? 'default' : 'outline'}
-                    onClick={() => setFilterStatus('verified')}
+                  <Button 
+                    size="sm"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    Vérifiées
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nouvelle entreprise
                   </Button>
-                  <Button
-                    variant={filterStatus === 'pending' ? 'default' : 'outline'}
-                    onClick={() => setFilterStatus('pending')}
-                  >
-                    En attente
-                  </Button>
-                  <Button
-                    variant={filterStatus === 'premium' ? 'default' : 'outline'}
-                    onClick={() => setFilterStatus('premium')}
-                  >
-                    Premium
-                  </Button>
-                  <Button
-                    variant={filterStatus === 'active' ? 'default' : 'outline'}
-                    onClick={() => setFilterStatus('active')}
-                  >
-                    Actives
+                  <Button variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Exporter
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Companies Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCompanies.map((company) => {
-              const statusInfo = getStatusBadge(company);
-              
-              return (
-                <Card key={company.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg mb-2">{company.company_name}</CardTitle>
-                        <Badge className={statusInfo.color}>
-                          {statusInfo.label}
-                        </Badge>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </div>
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Entreprises</CardTitle>
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.totalCompanies.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Toutes les entreprises
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Entreprises Vérifiées</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{stats.verifiedCompanies.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {((stats.verifiedCompanies / stats.totalCompanies) * 100).toFixed(1)}% du total
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">En Attente</CardTitle>
+                  <XCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-600">{stats.pendingCompanies.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Nécessitent une vérification
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Entreprises Actives</CardTitle>
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">{stats.activeCompanies.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Comptes actifs
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Filters and Search */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>Filtres et Recherche</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="search">Rechercher</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        id="search"
+                        placeholder="Nom, NIF, email..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <MapPin className="w-4 h-4" />
-                        <span>{company.company_address}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Phone className="w-4 h-4" />
-                        <span>{company.phone}</span>
-                      </div>
-                      
-                      {company.website && (
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          <Globe className="w-4 h-4" />
-                          <span>{company.website}</span>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Building2 className="w-4 h-4" />
-                        <span>{company.industry}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Users className="w-4 h-4" />
-                        <span>{company.employee_count} employés</span>
-                      </div>
-                      
-                      {company.description && (
-                        <div className="text-sm text-gray-600">
-                          <FileText className="w-4 h-4 inline mr-2" />
-                          {company.description}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="flex space-x-2">
-                        {!company.is_verified && (
-                          <Button 
-                            size="sm"
-                            onClick={() => handleCompanyAction(company.id, 'verify')}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Vérifier
-                          </Button>
-                        )}
-                        
-                        {company.is_verified && !company.is_premium && (
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleCompanyAction(company.id, 'premium')}
-                          >
-                            <Star className="w-4 h-4 mr-1" />
-                            Premium
-                          </Button>
-                        )}
-                        
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCompanyAction(company.id, 'suspend')}
-                        >
-                          <Clock className="w-4 h-4 mr-1" />
-                          Suspendre
-                        </Button>
-                        
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleCompanyAction(company.id, 'delete')}
-                        >
-                          <Trash2 className="w-4 h-4 mr-1" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-          
-          {filteredCompanies.length === 0 && (
-            <Card className="col-span-full">
-              <CardContent className="text-center py-8 text-gray-500">
-                Aucune entreprise trouvée
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Statut</Label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Tous les statuts" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les statuts</SelectItem>
+                        <SelectItem value="verified">Vérifiées</SelectItem>
+                        <SelectItem value="pending">En attente</SelectItem>
+                        <SelectItem value="active">Actives</SelectItem>
+                        <SelectItem value="inactive">Inactives</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="sort">Trier par</Label>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Trier par" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="created_at">Date de création</SelectItem>
+                        <SelectItem value="company_name">Nom de l'entreprise</SelectItem>
+                        <SelectItem value="is_verified">Statut de vérification</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          )}
+
+            {/* Companies Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Entreprises ({sortedCompanies.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="cursor-pointer" onClick={() => handleSort('company_name')}>
+                          <div className="flex items-center space-x-1">
+                            <span>Entreprise</span>
+                            <ArrowUpDown className="w-4 h-4" />
+                          </div>
+                        </TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Adresse</TableHead>
+                        <TableHead>NIF/Matricule</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="cursor-pointer" onClick={() => handleSort('created_at')}>
+                          <div className="flex items-center space-x-1">
+                            <span>Créé le</span>
+                            <ArrowUpDown className="w-4 h-4" />
+                          </div>
+                        </TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedCompanies.map((company) => {
+                        const profile = profiles.find(p => p.user_id === company.user_id);
+                        return (
+                          <TableRow key={company.id}>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Building2 className="w-4 h-4 text-gray-400" />
+                                <div>
+                                  <div className="font-medium">{company.company_name}</div>
+                                  {profile && (
+                                    <div className="text-sm text-gray-500">{profile.email}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {profile && (
+                                <div className="space-y-1">
+                                  <div className="flex items-center space-x-1 text-sm">
+                                    <Mail className="w-3 h-3" />
+                                    <span>{profile.email}</span>
+                                  </div>
+                                  {profile.phone && (
+                                    <div className="flex items-center space-x-1 text-sm">
+                                      <Phone className="w-3 h-3" />
+                                      <span>{profile.phone}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-1 text-sm">
+                                <MapPin className="w-3 h-3" />
+                                <span className="truncate max-w-[200px]">{company.company_address}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="font-mono text-sm">{company.nif_matricule}</span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Badge variant={company.is_verified ? "default" : "secondary"}>
+                                  {company.is_verified ? "Vérifiée" : "En attente"}
+                                </Badge>
+                                {profile && (
+                                  <Badge variant={profile.is_active ? "outline" : "destructive"}>
+                                    {profile.is_active ? "Active" : "Inactive"}
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {formatDate(company.created_at)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    // Ouvrir les détails de l'entreprise
+                                  }}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                {permissions.companies && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button size="sm" variant="outline">
+                                        <MoreHorizontal className="w-4 h-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={() => handleCompanyAction(company.id, company.is_verified ? 'unverify' : 'verify')}
+                                      >
+                                        {company.is_verified ? (
+                                          <>
+                                            <XCircle className="w-4 h-4 mr-2" />
+                                            Non vérifier
+                                          </>
+                                        ) : (
+                                          <>
+                                            <CheckCircle className="w-4 h-4 mr-2" />
+                                            Vérifier
+                                          </>
+                                        )}
+                                      </DropdownMenuItem>
+                                      {profile && (
+                                        <DropdownMenuItem
+                                          onClick={() => handleCompanyAction(company.id, profile.is_active ? 'deactivate' : 'activate')}
+                                        >
+                                          {profile.is_active ? (
+                                            <>
+                                              <XCircle className="w-4 h-4 mr-2" />
+                                              Désactiver
+                                            </>
+                                          ) : (
+                                            <>
+                                              <CheckCircle className="w-4 h-4 mr-2" />
+                                              Activer
+                                            </>
+                                          )}
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuItem>
+                                        <Edit className="w-4 h-4 mr-2" />
+                                        Modifier
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem className="text-red-600">
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Supprimer
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </main>
       </div>
     </div>
