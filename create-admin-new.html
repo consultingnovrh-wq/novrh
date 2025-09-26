@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Création Administrateur NovRH - Nouveau Système</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #1f2937;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .role-info {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .role-info h4 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .permissions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+        }
+        
+        .permission {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px;
+            background: white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .permission.enabled {
+            color: #059669;
+        }
+        
+        .permission.disabled {
+            color: #6b7280;
+        }
+        
+        .permission-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .permission-dot.enabled {
+            background: #10b981;
+        }
+        
+        .permission-dot.disabled {
+            background: #d1d5db;
+        }
+        
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .step.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .step.completed {
+            background: #10b981;
+            color: white;
+        }
+        
+        .step.pending {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+        
+        .step-line {
+            width: 50px;
+            height: 2px;
+            background: #e5e7eb;
+            margin-top: 19px;
+        }
+        
+        .step-line.completed {
+            background: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Création Administrateur</h1>
+            <p>Nouveau système de gestion des rôles NovRH</p>
+        </div>
+        
+        <div class="step-indicator">
+            <div class="step active" id="step1">1</div>
+            <div class="step-line"></div>
+            <div class="step pending" id="step2">2</div>
+            <div class="step-line"></div>
+            <div class="step pending" id="step3">3</div>
+        </div>
+        
+        <form id="adminForm">
+            <div class="form-group">
+                <label for="supabaseUrl">🔗 URL Supabase :</label>
+                <input type="text" id="supabaseUrl" placeholder="https://votre-projet.supabase.co" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="supabaseKey">🔑 Clé Service Role :</label>
+                <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">📧 Email :</label>
+                    <input type="email" id="email" value="speakaboutai@gmail.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">🔒 Mot de passe :</label>
+                    <input type="password" id="password" value="Mariamden7576" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">👤 Prénom :</label>
+                    <input type="text" id="firstName" value="Admin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastName">👤 Nom :</label>
+                    <input type="text" id="lastName" value="NovRH" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="role">🛡️ Rôle d'Administration :</label>
+                <select id="role" required>
+                    <option value="">Sélectionner un rôle...</option>
+                    <option value="super_admin">👑 Super Administrateur</option>
+                    <option value="admin">🛡️ Administrateur</option>
+                    <option value="moderator">👁️ Modérateur</option>
+                    <option value="support">👥 Support Client</option>
+                    <option value="analyst">⭐ Analyste</option>
+                </select>
+                
+                <div class="role-info" id="roleInfo" style="display: none;">
+                    <h4>Permissions du rôle :</h4>
+                    <div class="permissions" id="permissions"></div>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Création de l'administrateur en cours...</p>
+            </div>
+            
+            <button type="submit" id="submitBtn">
+                🎯 Créer l'Administrateur
+            </button>
+        </form>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        // Rôles et permissions
+        const roles = {
+            super_admin: {
+                name: 'Super Administrateur',
+                permissions: {
+                    users: true,
+                    companies: true,
+                    jobs: true,
+                    candidates: true,
+                    settings: true,
+                    reports: true,
+                    roles: true
+                }
+            },
+            admin: {
+                name: 'Administrateur',
+                permissions: {
+                    users: true,
+                    companies: true,
+                    jobs: true,
+                    candidates: true,
+                    reports: true,
+                    settings: false,
+                    roles: false
+                }
+            },
+            moderator: {
+                name: 'Modérateur',
+                permissions: {
+                    users: false,
+                    companies: true,
+                    jobs: true,
+                    candidates: true,
+                    reports: false,
+                    settings: false,
+                    roles: false
+                }
+            },
+            support: {
+                name: 'Support Client',
+                permissions: {
+                    users: true,
+                    companies: false,
+                    jobs: false,
+                    candidates: true,
+                    reports: false,
+                    settings: false,
+                    roles: false
+                }
+            },
+            analyst: {
+                name: 'Analyste',
+                permissions: {
+                    users: false,
+                    companies: false,
+                    jobs: false,
+                    candidates: false,
+                    reports: true,
+                    settings: false,
+                    roles: false
+                }
+            }
+        };
+
+        // Mettre à jour les permissions quand le rôle change
+        document.getElementById('role').addEventListener('change', function() {
+            const roleId = this.value;
+            const roleInfo = document.getElementById('roleInfo');
+            const permissionsDiv = document.getElementById('permissions');
+            
+            if (roleId && roles[roleId]) {
+                const role = roles[roleId];
+                roleInfo.style.display = 'block';
+                
+                permissionsDiv.innerHTML = '';
+                Object.entries(role.permissions).forEach(([permission, enabled]) => {
+                    const permissionDiv = document.createElement('div');
+                    permissionDiv.className = `permission ${enabled ? 'enabled' : 'disabled'}`;
+                    permissionDiv.innerHTML = `
+                        <div class="permission-dot ${enabled ? 'enabled' : 'disabled'}"></div>
+                        ${permission}
+                    `;
+                    permissionsDiv.appendChild(permissionDiv);
+                });
+            } else {
+                roleInfo.style.display = 'none';
+            }
+        });
+
+        // Gestion du formulaire
+        document.getElementById('adminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const supabaseUrl = document.getElementById('supabaseUrl').value;
+            const supabaseKey = document.getElementById('supabaseKey').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const roleId = document.getElementById('role').value;
+            
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Afficher le loading
+            loadingDiv.style.display = 'block';
+            submitBtn.disabled = true;
+            resultDiv.style.display = 'none';
+            
+            try {
+                // Étape 1: Créer l'utilisateur
+                updateStep(1, 'completed');
+                updateStep(2, 'active');
+                
+                const createUserResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        email_confirm: true
+                    })
+                });
+                
+                if (!createUserResponse.ok) {
+                    const errorData = await createUserResponse.json();
+                    throw new Error(`Erreur création utilisateur: ${errorData.msg || 'Erreur inconnue'}`);
+                }
+                
+                const userData = await createUserResponse.json();
+                console.log('Utilisateur créé:', userData);
+                
+                // Étape 2: Créer le profil
+                updateStep(2, 'completed');
+                updateStep(3, 'active');
+                
+                const createProfileResponse = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey
+                    },
+                    body: JSON.stringify({
+                        user_id: userData.id,
+                        user_type: 'admin',
+                        email: email,
+                        first_name: firstName,
+                        last_name: lastName,
+                        is_active: true,
+                        email_verified: true
+                    })
+                });
+                
+                if (!createProfileResponse.ok) {
+                    const errorData = await createProfileResponse.json();
+                    throw new Error(`Erreur création profil: ${errorData.message || 'Erreur inconnue'}`);
+                }
+                
+                // Étape 3: Créer l'administrateur avec rôle
+                const createAdminResponse = await fetch(`${supabaseUrl}/rest/v1/administrators`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey
+                    },
+                    body: JSON.stringify({
+                        user_id: userData.id,
+                        role_id: roleId,
+                        is_active: true
+                    })
+                });
+                
+                if (!createAdminResponse.ok) {
+                    const errorData = await createAdminResponse.json();
+                    throw new Error(`Erreur création administrateur: ${errorData.message || 'Erreur inconnue'}`);
+                }
+                
+                updateStep(3, 'completed');
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    ✅ <strong>Administrateur créé avec succès !</strong><br><br>
+                    📧 Email: ${email}<br>
+                    🔑 Mot de passe: ${password}<br>
+                    🛡️ Rôle: ${roles[roleId].name}<br>
+                    🆔 ID Utilisateur: ${userData.id}<br><br>
+                    <a href="/admin" style="color: #065f46; font-weight: bold; text-decoration: none; background: #d1fae5; padding: 10px 20px; border-radius: 5px; display: inline-block;">🚀 Accéder au Dashboard Admin</a>
+                `;
+                resultDiv.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ <strong>Erreur:</strong> ${error.message}`;
+                resultDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        function updateStep(stepNumber, status) {
+            const step = document.getElementById(`step${stepNumber}`);
+            step.className = `step ${status}`;
+        }
+    </script>
+</body>
+</html>

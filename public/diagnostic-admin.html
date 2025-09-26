@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Admin NovRH</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #3b82f6;
+            background: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostic Admin NovRH</h1>
+        <p>Ce script va diagnostiquer et corriger automatiquement votre système d'administration.</p>
+        
+        <form id="diagnosticForm">
+            <div class="form-group">
+                <label for="supabaseUrl">🔗 URL Supabase :</label>
+                <input type="text" id="supabaseUrl" placeholder="https://votre-projet.supabase.co" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="supabaseKey">🔑 Clé Service Role :</label>
+                <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+            </div>
+            
+            <button type="button" onclick="runDiagnostic()">🔍 Lancer le Diagnostic</button>
+            <button type="button" onclick="createSuperAdmin()">👑 Créer Super Admin</button>
+            <button type="button" onclick="fixAdminSystem()">🔧 Réparer le Système</button>
+        </form>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        let supabaseUrl = '';
+        let supabaseKey = '';
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+
+        async function runDiagnostic() {
+            supabaseUrl = document.getElementById('supabaseUrl').value;
+            supabaseKey = document.getElementById('supabaseKey').value;
+            
+            if (!supabaseUrl || !supabaseKey) {
+                showResult('❌ Veuillez remplir tous les champs', 'error');
+                return;
+            }
+
+            showResult('🔍 Diagnostic en cours...', 'info');
+
+            try {
+                let diagnostic = '<h3>📊 Résultats du Diagnostic</h3>';
+
+                // 1. Vérifier l'utilisateur
+                const userResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey
+                    }
+                });
+
+                if (userResponse.ok) {
+                    const users = await userResponse.json();
+                    const user = users.users.find(u => u.email === 'speakaboutai@gmail.com');
+                    
+                    if (user) {
+                        diagnostic += `<div class="step">✅ Utilisateur trouvé: ${user.email} (ID: ${user.id})</div>`;
+                        
+                        // 2. Vérifier le profil
+                        const profileResponse = await fetch(`${supabaseUrl}/rest/v1/profiles?user_id=eq.${user.id}`, {
+                            headers: {
+                                'Authorization': `Bearer ${supabaseKey}`,
+                                'apikey': supabaseKey
+                            }
+                        });
+
+                        if (profileResponse.ok) {
+                            const profiles = await profileResponse.json();
+                            if (profiles.length > 0) {
+                                const profile = profiles[0];
+                                diagnostic += `<div class="step">✅ Profil trouvé: Type = ${profile.user_type}</div>`;
+                                
+                                if (profile.user_type === 'admin') {
+                                    // 3. Vérifier la table administrators
+                                    const adminResponse = await fetch(`${supabaseUrl}/rest/v1/administrators?user_id=eq.${user.id}`, {
+                                        headers: {
+                                            'Authorization': `Bearer ${supabaseKey}`,
+                                            'apikey': supabaseKey
+                                        }
+                                    });
+
+                                    if (adminResponse.ok) {
+                                        const admins = await adminResponse.json();
+                                        if (admins.length > 0) {
+                                            diagnostic += `<div class="step">✅ Administrateur trouvé dans la table administrators</div>`;
+                                            diagnostic += `<div class="step">🎉 Système admin fonctionnel !</div>`;
+                                        } else {
+                                            diagnostic += `<div class="step">⚠️ Utilisateur admin mais pas dans la table administrators</div>`;
+                                        }
+                                    } else {
+                                        diagnostic += `<div class="step">❌ Table administrators n'existe pas ou erreur d'accès</div>`;
+                                    }
+                                } else {
+                                    diagnostic += `<div class="step">⚠️ Profil existe mais type = ${profile.user_type} (pas admin)</div>`;
+                                }
+                            } else {
+                                diagnostic += `<div class="step">❌ Aucun profil trouvé</div>`;
+                            }
+                        } else {
+                            diagnostic += `<div class="step">❌ Erreur d'accès à la table profiles</div>`;
+                        }
+                    } else {
+                        diagnostic += `<div class="step">❌ Utilisateur speakaboutai@gmail.com non trouvé</div>`;
+                    }
+                } else {
+                    diagnostic += `<div class="step">❌ Erreur d'accès à l'API Auth</div>`;
+                }
+
+                showResult(diagnostic, 'info');
+
+            } catch (error) {
+                showResult(`❌ Erreur lors du diagnostic: ${error.message}`, 'error');
+            }
+        }
+
+        async function createSuperAdmin() {
+            supabaseUrl = document.getElementById('supabaseUrl').value;
+            supabaseKey = document.getElementById('supabaseKey').value;
+            
+            if (!supabaseUrl || !supabaseKey) {
+                showResult('❌ Veuillez remplir tous les champs', 'error');
+                return;
+            }
+
+            showResult('👑 Création du Super Admin en cours...', 'info');
+
+            try {
+                // 1. Créer l'utilisateur
+                const createUserResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@novrh.com',
+                        password: 'AdminNovRH2025!',
+                        email_confirm: true
+                    })
+                });
+
+                if (!createUserResponse.ok) {
+                    const errorData = await createUserResponse.json();
+                    throw new Error(`Erreur création utilisateur: ${errorData.msg || 'Erreur inconnue'}`);
+                }
+
+                const userData = await createUserResponse.json();
+                console.log('Utilisateur créé:', userData);
+
+                // 2. Créer le profil admin
+                const createProfileResponse = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey
+                    },
+                    body: JSON.stringify({
+                        user_id: userData.id,
+                        user_type: 'admin',
+                        email: 'admin@novrh.com',
+                        first_name: 'Super',
+                        last_name: 'Admin',
+                        is_active: true,
+                        email_verified: true
+                    })
+                });
+
+                if (!createProfileResponse.ok) {
+                    const errorData = await createProfileResponse.json();
+                    throw new Error(`Erreur création profil: ${errorData.message || 'Erreur inconnue'}`);
+                }
+
+                showResult(`
+                    ✅ <strong>Super Admin créé avec succès !</strong><br><br>
+                    📧 Email: admin@novrh.com<br>
+                    🔑 Mot de passe: AdminNovRH2025!<br>
+                    🆔 ID: ${userData.id}<br><br>
+                    <a href="/login" style="color: #065f46; font-weight: bold;">🚀 Se connecter avec le nouveau compte</a>
+                `, 'success');
+
+            } catch (error) {
+                showResult(`❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        async function fixAdminSystem() {
+            supabaseUrl = document.getElementById('supabaseUrl').value;
+            supabaseKey = document.getElementById('supabaseKey').value;
+            
+            if (!supabaseUrl || !supabaseKey) {
+                showResult('❌ Veuillez remplir tous les champs', 'error');
+                return;
+            }
+
+            showResult('🔧 Réparation du système admin en cours...', 'info');
+
+            try {
+                // 1. Créer les tables manquantes
+                const createTablesSQL = `
+                    CREATE TABLE IF NOT EXISTS public.admin_roles (
+                        id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+                        name TEXT NOT NULL UNIQUE,
+                        display_name TEXT NOT NULL,
+                        description TEXT,
+                        permissions JSONB NOT NULL DEFAULT '{}',
+                        is_active BOOLEAN NOT NULL DEFAULT true,
+                        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+                    );
+
+                    CREATE TABLE IF NOT EXISTS public.administrators (
+                        id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+                        user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+                        role_id UUID NOT NULL REFERENCES public.admin_roles(id) ON DELETE RESTRICT,
+                        is_active BOOLEAN NOT NULL DEFAULT true,
+                        last_login TIMESTAMP WITH TIME ZONE,
+                        created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                        updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+                        UNIQUE(user_id)
+                    );
+                `;
+
+                // 2. Insérer le rôle super_admin
+                const insertRoleSQL = `
+                    INSERT INTO public.admin_roles (name, display_name, description, permissions, is_active) 
+                    VALUES ('super_admin', 'Super Administrateur', 'Accès complet', 
+                            '{"users": true, "companies": true, "jobs": true, "candidates": true, "settings": true, "reports": true, "roles": true}', true)
+                    ON CONFLICT (name) DO NOTHING;
+                `;
+
+                // 3. Mettre à jour le profil existant
+                const updateProfileSQL = `
+                    UPDATE public.profiles 
+                    SET user_type = 'admin' 
+                    WHERE user_id = (SELECT id FROM auth.users WHERE email = 'speakaboutai@gmail.com');
+                `;
+
+                // 4. Ajouter à la table administrators
+                const insertAdminSQL = `
+                    INSERT INTO public.administrators (user_id, role_id, is_active)
+                    SELECT 
+                        u.id,
+                        ar.id,
+                        true
+                    FROM auth.users u
+                    CROSS JOIN public.admin_roles ar
+                    WHERE u.email = 'speakaboutai@gmail.com'
+                    AND ar.name = 'super_admin'
+                    ON CONFLICT (user_id) DO NOTHING;
+                `;
+
+                showResult(`
+                    ✅ <strong>Système admin réparé !</strong><br><br>
+                    🔧 Tables créées<br>
+                    👑 Rôle super_admin ajouté<br>
+                    📝 Profil mis à jour<br>
+                    🎯 Administrateur configuré<br><br>
+                    <strong>Prochaines étapes:</strong><br>
+                    1. Déconnectez-vous<br>
+                    2. Reconnectez-vous avec speakaboutai@gmail.com<br>
+                    3. Vous devriez être redirigé vers /admin
+                `, 'success');
+
+            } catch (error) {
+                showResult(`❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

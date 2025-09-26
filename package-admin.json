@@ -1,0 +1,38 @@
+{
+  "name": "novrh-admin-scripts",
+  "version": "1.0.0",
+  "description": "Scripts d'administration pour la plateforme NovRH",
+  "main": "index.js",
+  "scripts": {
+    "setup-admin": "node scripts/setup-admin.js",
+    "create-admin": "node scripts/setup-admin.js",
+    "help": "echo 'Scripts disponibles: npm run setup-admin <email> <password>'"
+  },
+  "keywords": [
+    "novrh",
+    "admin",
+    "supabase",
+    "administration",
+    "collaborateurs"
+  ],
+  "author": "NovRH Team",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/novrh/novrh-admin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/novrh/novrh-admin/issues"
+  },
+  "homepage": "https://github.com/novrh/novrh-admin#readme"
+}

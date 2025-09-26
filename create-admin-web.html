@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Création Compte Admin NovRH</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Création Compte Admin NovRH</h1>
+        <p>Utilisez ce formulaire pour créer un nouveau compte administrateur.</p>
+        
+        <form id="adminForm">
+            <div class="form-group">
+                <label for="supabaseUrl">URL Supabase :</label>
+                <input type="text" id="supabaseUrl" placeholder="https://votre-projet.supabase.co" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="supabaseKey">Clé Service Role :</label>
+                <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Admin :</label>
+                <input type="email" id="email" value="speakaboutai@gmail.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Mot de passe :</label>
+                <input type="password" id="password" value="Mariamden7576" required>
+            </div>
+            
+            <button type="submit">🎯 Créer le Compte Administrateur</button>
+        </form>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('adminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const supabaseUrl = document.getElementById('supabaseUrl').value;
+            const supabaseKey = document.getElementById('supabaseKey').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = '⏳ Création du compte en cours...';
+            
+            try {
+                // Créer l'utilisateur
+                const createUserResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        email_confirm: true
+                    })
+                });
+                
+                if (!createUserResponse.ok) {
+                    const errorData = await createUserResponse.json();
+                    throw new Error(`Erreur création utilisateur: ${errorData.msg || 'Erreur inconnue'}`);
+                }
+                
+                const userData = await createUserResponse.json();
+                console.log('Utilisateur créé:', userData);
+                
+                // Créer le profil admin
+                const createProfileResponse = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${supabaseKey}`,
+                        'apikey': supabaseKey
+                    },
+                    body: JSON.stringify({
+                        user_id: userData.id,
+                        user_type: 'admin',
+                        email: email,
+                        first_name: 'Admin',
+                        last_name: 'NovRH',
+                        is_active: true,
+                        email_verified: true
+                    })
+                });
+                
+                if (!createProfileResponse.ok) {
+                    const errorData = await createProfileResponse.json();
+                    throw new Error(`Erreur création profil: ${errorData.message || 'Erreur inconnue'}`);
+                }
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    ✅ <strong>Compte administrateur créé avec succès !</strong><br>
+                    📧 Email: ${email}<br>
+                    🔑 Mot de passe: ${password}<br>
+                    🆔 ID Utilisateur: ${userData.id}<br><br>
+                    <a href="/admin" style="color: #065f46; font-weight: bold;">🚀 Accéder au Dashboard Admin</a>
+                `;
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ <strong>Erreur:</strong> ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
