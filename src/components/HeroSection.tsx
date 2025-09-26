@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { useDynamicActions } from "@/hooks/use-dynamic-actions";
 import heroImage from "@/assets/chef.png";
 
 const HeroSection = () => {
+  const { handleViewPricing, handleRegister, isAuthenticated, userType } = useDynamicActions();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with dark blue color */}
@@ -41,11 +44,20 @@ const HeroSection = () => {
                   Rejoignez notre écosystème innovant et contribuez à façonner l'avenir du travail en Afrique.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button asChild size="lg" className="bg-white text-primary hover:bg-white/90">
-                    <a href="/pricing">Voir nos plans d'abonnement</a>
+                  <Button 
+                    onClick={handleViewPricing}
+                    size="lg" 
+                    className="bg-white text-primary hover:bg-white/90"
+                  >
+                    Voir nos plans d'abonnement
                   </Button>
-                  <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary">
-                    <a href="/register">Commencer gratuitement</a>
+                  <Button 
+                    onClick={handleRegister}
+                    size="lg" 
+                    variant="outline" 
+                    className="border-white text-white hover:bg-white hover:text-primary"
+                  >
+                    {isAuthenticated ? `Bonjour ${userType === 'company' ? 'Entreprise' : userType === 'candidate' ? 'Candidat' : 'Utilisateur'} !` : 'Commencer gratuitement'}
                   </Button>
                 </div>
               </div>

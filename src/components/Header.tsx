@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown, ChevronRight, Crown, Star, Building2, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useDynamicActions } from "@/hooks/use-dynamic-actions";
 import { supabase } from "@/integrations/supabase/client";
 import {
   NavigationMenu,
@@ -25,6 +26,18 @@ const Header = () => {
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const { userSubscription, getCurrentPlanName, hasActiveSubscription } = useSubscription();
+  const { 
+    isAuthenticated, 
+    userType, 
+    handleDashboard, 
+    handleLogout, 
+    handleLogin, 
+    handleRegister,
+    handlePostJob,
+    handleAddCV,
+    handleViewCVTheque,
+    handleAddCompany
+  } = useDynamicActions();
 
   useEffect(() => {
     const getUser = async () => {
@@ -249,9 +262,12 @@ const Header = () => {
                           </div>
                           
                           <NavigationMenuLink asChild>
-                            <a href="/dashboard" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900">
+                            <button 
+                              onClick={handleDashboard}
+                              className="w-full text-left block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                            >
                               <div className="text-sm font-medium leading-none text-gray-900">Tableau de bord</div>
-                            </a>
+                            </button>
                           </NavigationMenuLink>
                           
                           <NavigationMenuLink asChild>
@@ -262,10 +278,7 @@ const Header = () => {
                           
                           <NavigationMenuLink asChild>
                             <button 
-                              onClick={async () => {
-                                await supabase.auth.signOut();
-                                window.location.href = '/';
-                              }}
+                              onClick={handleLogout}
                               className="w-full text-left block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
                             >
                               <div className="text-sm font-medium leading-none text-gray-900">Se déconnecter</div>
@@ -275,14 +288,20 @@ const Header = () => {
                       ) : (
                         <>
                           <NavigationMenuLink asChild>
-                            <a href="/login" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900">
+                            <button 
+                              onClick={handleLogin}
+                              className="w-full text-left block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                            >
                               <div className="text-sm font-medium leading-none text-gray-900">Se connecter</div>
-                            </a>
+                            </button>
                           </NavigationMenuLink>
                           <NavigationMenuLink asChild>
-                            <a href="/register" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900">
+                            <button 
+                              onClick={handleRegister}
+                              className="w-full text-left block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                            >
                               <div className="text-sm font-medium leading-none text-gray-900">S'inscrire</div>
-                            </a>
+                            </button>
                           </NavigationMenuLink>
                         </>
                       )}

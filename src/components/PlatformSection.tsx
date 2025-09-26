@@ -1,8 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useDynamicActions } from "@/hooks/use-dynamic-actions";
 import { Users, Building, FileText, Search, BookOpen, BarChart } from "lucide-react";
 
 const PlatformSection = () => {
+  const { handleViewJobs, handleAddCV, handlePostJob, handleViewCVTheque, handleViewServices, isAuthenticated, userType } = useDynamicActions();
+
   const candidateFeatures = [
     {
       icon: <Search className="h-6 w-6" />,
@@ -85,10 +88,22 @@ const PlatformSection = () => {
                   </div>
                 </div>
               ))}
-              <div className="pt-4">
-                <Button variant="outline" className="w-full">
+              <div className="pt-4 space-y-2">
+                <Button 
+                  onClick={handleViewJobs}
+                  variant="outline" 
+                  className="w-full"
+                >
                   Consulter les offres
                 </Button>
+                {isAuthenticated && (userType === 'candidate' || userType === 'student') && (
+                  <Button 
+                    onClick={handleAddCV}
+                    className="w-full"
+                  >
+                    Ajouter mon CV
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -116,10 +131,31 @@ const PlatformSection = () => {
                   </div>
                 </div>
               ))}
-              <div className="pt-4">
-                <Button variant="outline" className="w-full">
+              <div className="pt-4 space-y-2">
+                <Button 
+                  onClick={handleViewServices}
+                  variant="outline" 
+                  className="w-full"
+                >
                   Consulter les services
                 </Button>
+                {isAuthenticated && userType === 'company' && (
+                  <>
+                    <Button 
+                      onClick={handlePostJob}
+                      className="w-full"
+                    >
+                      Publier une offre
+                    </Button>
+                    <Button 
+                      onClick={handleViewCVTheque}
+                      variant="secondary"
+                      className="w-full"
+                    >
+                      Accéder à la CVthèque
+                    </Button>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import JobSearchSection from "@/components/JobSearchSection";
 import PlatformSection from "@/components/PlatformSection";
+import DynamicActionSection from "@/components/DynamicActionSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -11,6 +12,7 @@ const Index = () => {
       <HeroSection />
       <JobSearchSection />
       <PlatformSection />
+      <DynamicActionSection />
       <Footer />
     </div>
   );
