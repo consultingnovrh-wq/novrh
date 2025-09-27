@@ -41,7 +41,6 @@ const DynamicButton = ({
     handleRegister,
     handleLogin,
     handleDashboard,
-    getButtonText,
     isAuthenticated,
     userType
   } = useDynamicActions();
