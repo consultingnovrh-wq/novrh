@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { emailService } from "@/services/emailService";
 import { 
   User, 
   Building2, 
@@ -230,10 +231,23 @@ const Register = () => {
           console.error('Erreur lors de la création du profil candidat:', candidateError);
         }
 
+        // Envoyer l'email de bienvenue
+        try {
+          await emailService.sendWelcomeEmail({
+            firstName: candidateData.firstName,
+            lastName: candidateData.lastName,
+            userType: 'candidate',
+            email: candidateData.email
+          });
+        } catch (emailError) {
+          console.error('Erreur envoi email:', emailError);
+          // Continuer même si l'email échoue
+        }
+
         setSuccess(true);
         toast({
           title: "Inscription réussie ! 🎉",
-          description: "Votre compte candidat a été créé avec succès. Veuillez vérifier votre email pour confirmer votre compte.",
+          description: "Votre compte candidat a été créé avec succès. Un email de bienvenue vous a été envoyé.",
         });
 
         // Rediriger vers la page de login après 3 secondes
@@ -334,10 +348,23 @@ const Register = () => {
           console.error('Erreur lors de la création du profil entreprise:', companyError);
         }
 
+        // Envoyer l'email de bienvenue
+        try {
+          await emailService.sendWelcomeEmail({
+            firstName: companyData.companyName,
+            lastName: 'Entreprise',
+            userType: 'company',
+            email: companyData.email
+          });
+        } catch (emailError) {
+          console.error('Erreur envoi email:', emailError);
+          // Continuer même si l'email échoue
+        }
+
         setSuccess(true);
         toast({
           title: "Inscription réussie ! 🎉",
-          description: "Votre compte entreprise a été créé avec succès. Veuillez vérifier votre email pour confirmer votre compte.",
+          description: "Votre compte entreprise a été créé avec succès. Un email de bienvenue vous a été envoyé.",
         });
 
         // Rediriger vers la page de login après 3 secondes

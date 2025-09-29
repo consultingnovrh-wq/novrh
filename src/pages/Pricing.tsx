@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Check, Crown, GraduationCap, Building2, Users, Star } from "lucide-react";
+import { Check, Crown, GraduationCap, Building2, Users, Star, User } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -38,6 +38,140 @@ const Pricing = () => {
   const getCompanyPlans = () => plans.filter(plan => 
     plan.name.includes('Recrutement') && plan.duration_days === (selectedPeriod === 'monthly' ? 30 : 365)
   );
+
+  const getAuditRHPlans = () => [
+    {
+      id: 'audit-1',
+      name: 'Audit RH & Organisationnel',
+      description: 'Diagnostic complet des dysfonctionnements RH, juridiques et santé au travail',
+      price: null,
+      currency: 'FCFA',
+      features: [
+        'Questionnaire aux collaborateurs & dirigeants',
+        'Observation du site',
+        'Analyse des procédures internes RH',
+        'Étude documentaire complète',
+        'Diagnostic global + schématisation',
+        'Proposition d\'actions correctives',
+        'Suivi de mise en œuvre (optionnel)'
+      ],
+      pricing: 'Sur devis'
+    }
+  ];
+
+  const getFormationPlans = () => [
+    {
+      id: 'formation-1',
+      name: 'Recrutement efficace et sans biais',
+      description: 'Formation sur les techniques de recrutement efficaces',
+      price: null,
+      currency: 'FCFA',
+      features: ['Techniques de recrutement', 'Prévention des biais', 'Présentiel ou à distance'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'formation-2',
+      name: 'Règles SST et obligations légales',
+      description: 'Formation sur la sécurité et santé au travail',
+      price: null,
+      currency: 'FCFA',
+      features: ['Sécurité au travail', 'Obligations légales', 'Présentiel ou à distance'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'formation-3',
+      name: 'Dialogue social et droit du travail',
+      description: 'Formation sur le dialogue social et aspects juridiques',
+      price: null,
+      currency: 'FCFA',
+      features: ['Dialogue social', 'Droit du travail', 'Relations sociales', 'Présentiel ou à distance'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'formation-4',
+      name: 'Leadership et communication',
+      description: 'Formation sur le leadership et communication interne',
+      price: null,
+      currency: 'FCFA',
+      features: ['Leadership', 'Communication interne', 'Gestion du stress', 'Présentiel ou à distance'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'formation-5',
+      name: 'Prévention des risques professionnels',
+      description: 'Formation sur la prévention et gestion des risques',
+      price: null,
+      currency: 'FCFA',
+      features: ['Prévention des risques', 'Gestion des risques', 'Présentiel ou à distance'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'formation-6',
+      name: 'Gestion de conflits et motivation',
+      description: 'Formation sur la gestion des conflits et motivation des équipes',
+      price: null,
+      currency: 'FCFA',
+      features: ['Gestion des conflits', 'Motivation des équipes', 'Présentiel ou à distance'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'formation-7',
+      name: 'Guide file/Serre file',
+      description: 'Formation théorique et pratique sur les techniques de guide file',
+      price: null,
+      currency: 'FCFA',
+      features: ['Formation théorique', 'Formation pratique', 'Présentiel ou à distance'],
+      pricing: 'Sur devis'
+    }
+  ];
+
+  const getStudentServicePlans = () => [
+    {
+      id: 'student-1',
+      name: 'Définir un projet professionnel',
+      description: 'Accompagnement pour définir un projet professionnel réaliste',
+      price: null,
+      currency: 'FCFA',
+      features: ['Orientation carrière', 'Planification carrière', 'Accompagnement personnalisé'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'student-2',
+      name: 'Apprendre à chercher un emploi',
+      description: 'Formation sur les techniques de recherche d\'emploi efficaces',
+      price: null,
+      currency: 'FCFA',
+      features: ['Techniques de recherche', 'Stratégies de candidature', 'Accompagnement personnalisé'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'student-3',
+      name: 'Créer un réseau professionnel',
+      description: 'Formation et accompagnement pour développer un réseau professionnel',
+      price: null,
+      currency: 'FCFA',
+      features: ['Networking', 'Développement réseau', 'Stratégies networking', 'Accompagnement personnalisé'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'student-4',
+      name: 'Trouver des financements',
+      description: 'Accompagnement pour identifier et obtenir des financements',
+      price: null,
+      currency: 'FCFA',
+      features: ['Financements', 'Subventions', 'Aides projets', 'Accompagnement démarches'],
+      pricing: 'Sur devis'
+    },
+    {
+      id: 'student-5',
+      name: 'Développer une posture professionnelle',
+      description: 'Formation sur le développement d\'une posture professionnelle adaptée',
+      price: null,
+      currency: 'FCFA',
+      features: ['Posture professionnelle', 'Développement personnel', 'Soft skills', 'Accompagnement personnalisé'],
+      pricing: 'Sur devis'
+    }
+  ];
 
   const getEducationalPlans = () => [
     {
@@ -223,6 +357,47 @@ const Pricing = () => {
                       ))}
                   </div>
                 </div>
+
+                {/* Services d'Accompagnement pour Étudiants */}
+                <div className="mt-16">
+                  <div className="text-center mb-12">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                      Services d'Accompagnement Professionnel
+                    </h3>
+                    <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                      Des services personnalisés pour vous accompagner dans votre parcours professionnel 
+                      et votre insertion dans le monde du travail.
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    {getStudentServicePlans().map((plan) => (
+                      <Card key={plan.id} className="relative">
+                        <CardHeader className="text-center pb-4">
+                          <CardTitle className="text-xl">{plan.name}</CardTitle>
+                          <CardDescription>{plan.description}</CardDescription>
+                          <div className="text-2xl font-bold text-primary mt-2">
+                            {plan.pricing}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          {plan.features.map((feature, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              <span className="text-sm">{feature}</span>
+                            </div>
+                          ))}
+                          <Button 
+                            className="w-full mt-4"
+                            variant="outline"
+                          >
+                            Demander un devis
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
               </TabsContent>
 
               {/* Entreprises */}
@@ -402,6 +577,87 @@ const Pricing = () => {
                     <li>• <strong>Recrutement autonomie :</strong> Accès à la plateforme avec accompagnement léger</li>
                     <li>• <strong>Tarifs annuels :</strong> Économies de 2 mois par rapport aux tarifs mensuels</li>
                   </ul>
+                </div>
+
+                {/* Audit RH & Formations pour Entreprises */}
+                <div className="mt-16">
+                  <div className="text-center mb-12">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                      🔍 Audit RH & Formations Professionnelles
+                    </h3>
+                    <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+                      Des services d'audit et de formation sur mesure pour développer les compétences 
+                      de vos équipes et optimiser votre organisation RH.
+                    </p>
+                  </div>
+
+                  {/* Audit RH */}
+                  <div className="mb-12">
+                    <h4 className="text-xl font-bold text-gray-900 mb-6 text-center">
+                      Audit RH & Organisationnel
+                    </h4>
+                    <div className="grid md:grid-cols-1 gap-8 max-w-4xl mx-auto">
+                      {getAuditRHPlans().map((plan) => (
+                        <Card key={plan.id} className="relative border-2 border-blue-200">
+                          <CardHeader className="text-center pb-4">
+                            <CardTitle className="text-xl">{plan.name}</CardTitle>
+                            <CardDescription>{plan.description}</CardDescription>
+                            <div className="text-2xl font-bold text-primary mt-2">
+                              {plan.pricing}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {plan.features.map((feature, index) => (
+                              <div key={index} className="flex items-center gap-2">
+                                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                <span className="text-sm">{feature}</span>
+                              </div>
+                            ))}
+                            <Button 
+                              className="w-full mt-4"
+                              variant="outline"
+                            >
+                              Demander un devis
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Formations */}
+                  <div>
+                    <h4 className="text-xl font-bold text-gray-900 mb-6 text-center">
+                      📚 Formations Professionnelles
+                    </h4>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                      {getFormationPlans().map((plan) => (
+                        <Card key={plan.id} className="relative">
+                          <CardHeader className="text-center pb-4">
+                            <CardTitle className="text-lg">{plan.name}</CardTitle>
+                            <CardDescription>{plan.description}</CardDescription>
+                            <div className="text-xl font-bold text-primary mt-2">
+                              {plan.pricing}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {plan.features.map((feature, index) => (
+                              <div key={index} className="flex items-center gap-2">
+                                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                <span className="text-sm">{feature}</span>
+                              </div>
+                            ))}
+                            <Button 
+                              className="w-full mt-4"
+                              variant="outline"
+                            >
+                              Demander un devis
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
 

@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import CVUpload from "@/components/CVUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -20,7 +22,8 @@ import {
   GraduationCap,
   Plus,
   Trash2,
-  Save
+  Save,
+  FileUp
 } from "lucide-react";
 
 interface CVData {
@@ -80,6 +83,8 @@ const AddCV = () => {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [newSkill, setNewSkill] = useState("");
+  const [existingCV, setExistingCV] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("upload");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -103,30 +108,25 @@ const AddCV = () => {
         .single();
 
       if (candidateData && !candidateError) {
-        // Charger le CV existant depuis le stockage Supabase
+        // Charger le CV existant
         if (candidateData.cv_url) {
-          const { data: cvFile } = await supabase.storage
-            .from('cvs')
-            .download(candidateData.cv_url);
-          
-          if (cvFile) {
-            // Ici vous pourriez parser le fichier CV si c'est un format structuré
-            // Pour l'instant, on charge juste les données de base
-            setCvData(prev => ({
-              ...prev,
-              personalInfo: {
-                firstName: candidateData.first_name || "",
-                lastName: candidateData.last_name || "",
-                email: user.email || "",
-                phone: candidateData.phone || "",
-                address: "",
-                linkedin: "",
-                website: ""
-              },
-              summary: candidateData.profile_description || ""
-            }));
-          }
+          setExistingCV(candidateData.cv_url);
         }
+        
+        // Charger les données de base
+        setCvData(prev => ({
+          ...prev,
+          personalInfo: {
+            firstName: candidateData.first_name || "",
+            lastName: candidateData.last_name || "",
+            email: user.email || "",
+            phone: candidateData.phone || "",
+            address: "",
+            linkedin: "",
+            website: ""
+          },
+          summary: candidateData.profile_description || ""
+        }));
       }
     } catch (error) {
       console.error('Erreur lors du chargement du CV:', error);
@@ -336,17 +336,43 @@ const AddCV = () => {
           <div className="max-w-4xl mx-auto">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {editing ? "Modifier mon CV" : "Mon CV"}
+                Mon CV
               </h1>
               <p className="text-gray-600">
-                {editing 
-                  ? "Modifiez votre CV pour le rendre plus attractif" 
-                  : "Gérez votre CV et vos informations professionnelles"
-                }
+                Gérez votre CV et vos informations professionnelles
               </p>
             </div>
 
-            <Card className="mb-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="upload" className="flex items-center gap-2">
+                  <FileUp className="w-4 h-4" />
+                  Upload de CV
+                </TabsTrigger>
+                <TabsTrigger value="create" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Créer un CV
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="upload" className="space-y-6">
+                <CVUpload
+                  existingCV={existingCV}
+                  onUploadSuccess={(fileUrl, fileName) => {
+                    setExistingCV(fileName);
+                    toast({
+                      title: "CV mis à jour !",
+                      description: "Votre CV a été sauvegardé avec succès.",
+                    });
+                  }}
+                  onUploadError={(error) => {
+                    console.error('Erreur upload CV:', error);
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="create" className="space-y-6">
+                <Card className="mb-6">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
@@ -711,30 +737,32 @@ const AddCV = () => {
               </CardContent>
             </Card>
 
-            {editing && (
-              <div className="flex gap-4 justify-end">
-                <Button variant="outline" onClick={() => setEditing(false)}>
-                  Annuler
-                </Button>
-                <Button onClick={saveCV} disabled={loading}>
-                  <Save className="h-4 w-4 mr-2" />
-                  {loading ? "Sauvegarde..." : "Sauvegarder"}
-                </Button>
-              </div>
-            )}
+                {editing && (
+                  <div className="flex gap-4 justify-end">
+                    <Button variant="outline" onClick={() => setEditing(false)}>
+                      Annuler
+                    </Button>
+                    <Button onClick={saveCV} disabled={loading}>
+                      <Save className="h-4 w-4 mr-2" />
+                      {loading ? "Sauvegarde..." : "Sauvegarder"}
+                    </Button>
+                  </div>
+                )}
 
-            {!editing && (
-              <div className="flex gap-4 justify-end">
-                <Button variant="outline" onClick={exportCV}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Exporter
-                </Button>
-                <Button onClick={() => setEditing(true)}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Modifier
-                </Button>
-              </div>
-            )}
+                {!editing && (
+                  <div className="flex gap-4 justify-end">
+                    <Button variant="outline" onClick={exportCV}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Exporter
+                    </Button>
+                    <Button onClick={() => setEditing(true)}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Modifier
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
