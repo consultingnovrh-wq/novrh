@@ -15,6 +15,7 @@ CREATE TABLE public.profiles (
     first_name TEXT,
     last_name TEXT,
     user_type user_type DEFAULT 'candidate' NOT NULL,
+    phone TEXT,
     is_active BOOLEAN DEFAULT true NOT NULL,
     email_verified BOOLEAN DEFAULT false NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
