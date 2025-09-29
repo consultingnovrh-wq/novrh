@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useDynamicActions } from "@/hooks/use-dynamic-actions";
-import heroImage from "@/assets/chef.png";
+import heroImage from "@/assets/off.png";
 
 const HeroSection = () => {
   const { handleViewPricing, handleRegister, isAuthenticated, userType } = useDynamicActions();
@@ -47,7 +47,8 @@ const HeroSection = () => {
                   <Button 
                     onClick={handleViewPricing}
                     size="lg" 
-                    className="bg-white text-primary hover:bg-white/90"
+                    variant="outline"
+                    className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
                   >
                     Voir nos plans d'abonnement
                   </Button>
@@ -55,7 +56,7 @@ const HeroSection = () => {
                     onClick={handleRegister}
                     size="lg" 
                     variant="outline" 
-                    className="border-white text-white hover:bg-white hover:text-primary"
+                    className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
                   >
                     {isAuthenticated ? `Bonjour ${userType === 'company' ? 'Entreprise' : userType === 'candidate' ? 'Candidat' : 'Utilisateur'} !` : 'Commencer gratuitement'}
                   </Button>
