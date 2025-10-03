@@ -127,7 +127,7 @@ const Dashboard = () => {
         title: 'Mon Profil',
         description: 'Gérer mes informations personnelles',
         icon: <User className="w-5 h-5" />,
-        href: userType === 'candidate' ? '/candidate-dashboard' : '/company-dashboard',
+        href: userType === 'candidate' ? '/candidate-dashboard' : '/dashboard/company',
         color: 'bg-blue-100 text-blue-600'
       },
       {
@@ -221,10 +221,15 @@ const Dashboard = () => {
                         <p className="text-sm text-gray-600 mb-3">
                           {action.description}
                         </p>
-                        <Button asChild size="sm" variant="outline">
-                          <a href={action.href}>
-                            Accéder
-                          </a>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            console.log(`🔗 Navigation vers: ${action.href}, userType: ${userType}, user:`, user);
+                            navigate(action.href);
+                          }}
+                        >
+                          Accéder
                         </Button>
                       </div>
                     </div>

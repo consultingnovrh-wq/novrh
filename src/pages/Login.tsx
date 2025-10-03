@@ -55,7 +55,7 @@ const Login = () => {
             navigate('/admin');
             break;
           case 'company':
-            navigate('/company-dashboard');
+            navigate('/dashboard/company');
             break;
           case 'candidate':
           default:

@@ -180,7 +180,7 @@ export const useDynamicActions = () => {
         navigate('/candidate-dashboard');
         break;
       case 'company':
-        navigate('/company-dashboard');
+        navigate('/dashboard/company');
         break;
       case 'student':
         navigate('/student-services');

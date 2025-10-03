@@ -183,7 +183,8 @@ const Register = () => {
           data: {
             first_name: candidateData.firstName,
             last_name: candidateData.lastName,
-            phone: candidateData.phone
+            phone: candidateData.phone,
+            user_type: 'candidate'
           }
         }
       });
@@ -193,23 +194,9 @@ const Register = () => {
       }
 
       if (authData.user) {
-        // Créer le profil utilisateur
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{
-            user_id: authData.user.id,
-            email: candidateData.email,
-            first_name: candidateData.firstName,
-            last_name: candidateData.lastName,
-            user_type: 'candidate',
-            is_active: true,
-            email_verified: false
-          }]);
-
-        if (profileError) {
-          console.error('Erreur profil:', profileError);
-          // Continuer même si le profil échoue, l'utilisateur peut le compléter plus tard
-        }
+        // Le profil utilisateur sera créé automatiquement par le trigger PostgreSQL
+        // Pas besoin de l'insérer manuellement
+        console.log('✅ Utilisateur créé, profil sera synchronisé automatiquement');
 
         // Créer le profil candidat
         try {
@@ -231,29 +218,33 @@ const Register = () => {
           console.error('Erreur lors de la création du profil candidat:', candidateError);
         }
 
-        // Envoyer l'email de bienvenue
+        // Envoyer l'email de bienvenue (désactivé temporairement pour éviter CORS)
         try {
-          await emailService.sendWelcomeEmail({
-            firstName: candidateData.firstName,
-            lastName: candidateData.lastName,
-            userType: 'candidate',
-            email: candidateData.email
-          });
+          console.log('📧 Email de bienvenue désactivé temporairement (problème CORS)');
+          // await emailService.sendWelcomeEmail({
+          //   firstName: candidateData.firstName,
+          //   lastName: candidateData.lastName,
+          //   userType: 'candidate',
+          //   email: candidateData.email
+          // });
         } catch (emailError) {
           console.error('Erreur envoi email:', emailError);
           // Continuer même si l'email échoue
         }
 
+        // Déconnecter l'utilisateur après l'inscription
+        await supabase.auth.signOut();
+        
         setSuccess(true);
         toast({
           title: "Inscription réussie ! 🎉",
-          description: "Votre compte candidat a été créé avec succès. Un email de bienvenue vous a été envoyé.",
+          description: "Votre compte candidat a été créé avec succès. Veuillez vous connecter avec vos identifiants.",
         });
 
-        // Rediriger vers la page de login après 3 secondes
+        // Rediriger vers la page de login après 2 secondes
         setTimeout(() => {
           navigate("/login");
-        }, 3000);
+        }, 2000);
       }
     } catch (error: any) {
       console.error('Erreur lors de l\'inscription:', error);
@@ -300,8 +291,9 @@ const Register = () => {
         options: {
           emailRedirectTo: `${window.location.origin}/login`,
           data: {
-            company_name: companyData.companyName,
-            company_address: companyData.companyAddress
+            first_name: companyData.companyName,
+            last_name: 'Entreprise',
+            user_type: 'company'
           }
         }
       });
@@ -311,23 +303,9 @@ const Register = () => {
       }
 
       if (authData.user) {
-        // Créer le profil utilisateur
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{
-            user_id: authData.user.id,
-            email: companyData.email,
-            first_name: companyData.companyName,
-            last_name: 'Entreprise',
-            user_type: 'company',
-            is_active: true,
-            email_verified: false
-          }]);
-
-        if (profileError) {
-          console.error('Erreur profil:', profileError);
-          // Continuer même si le profil échoue
-        }
+        // Le profil utilisateur sera créé automatiquement par le trigger PostgreSQL
+        // Pas besoin de l'insérer manuellement
+        console.log('✅ Utilisateur créé, profil sera synchronisé automatiquement');
 
         // Créer le profil entreprise
         try {
@@ -348,26 +326,30 @@ const Register = () => {
           console.error('Erreur lors de la création du profil entreprise:', companyError);
         }
 
-        // Envoyer l'email de bienvenue
+        // Envoyer l'email de bienvenue (désactivé temporairement pour éviter CORS)
         try {
-          await emailService.sendWelcomeEmail({
-            firstName: companyData.companyName,
-            lastName: 'Entreprise',
-            userType: 'company',
-            email: companyData.email
-          });
+          console.log('📧 Email de bienvenue désactivé temporairement (problème CORS)');
+          // await emailService.sendWelcomeEmail({
+          //   firstName: companyData.companyName,
+          //   lastName: 'Entreprise',
+          //   userType: 'company',
+          //   email: companyData.email
+          // });
         } catch (emailError) {
           console.error('Erreur envoi email:', emailError);
           // Continuer même si l'email échoue
         }
 
+        // Déconnecter l'utilisateur après l'inscription
+        await supabase.auth.signOut();
+        
         setSuccess(true);
         toast({
           title: "Inscription réussie ! 🎉",
-          description: "Votre compte entreprise a été créé avec succès. Un email de bienvenue vous a été envoyé.",
+          description: "Votre compte entreprise a été créé avec succès. Veuillez vous connecter avec vos identifiants.",
         });
 
-        // Rediriger vers la page de login après 3 secondes
+        // Rediriger vers la page de login après 2 secondes
         setTimeout(() => {
           navigate("/login");
         }, 3000);

@@ -325,53 +325,64 @@ const AdminDashboard = () => {
 
   const loadBusinessData = async () => {
     try {
-      // Charger les utilisateurs
-      const { data: usersData } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      setUsers(usersData || []);
+      // Exécuter toutes les requêtes en parallèle pour améliorer les performances
+      const [
+        usersResult,
+        companiesResult,
+        candidatesResult,
+        jobsResult,
+        paymentsResult,
+        subscriptionsResult
+      ] = await Promise.all([
+        // Charger les utilisateurs
+        supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100),
+        
+        // Charger les entreprises
+        supabase
+          .from('companies')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100),
+        
+        // Charger les candidats
+        supabase
+          .from('candidates')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100),
+        
+        // Charger les offres d'emploi
+        supabase
+          .from('jobs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100),
+        
+        // Charger les paiements
+        supabase
+          .from('payments')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100),
+        
+        // Charger les abonnements
+        supabase
+          .from('user_subscriptions')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100)
+      ]);
 
-      // Charger les entreprises
-      const { data: companiesData } = await supabase
-        .from('companies')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      setCompanies(companiesData || []);
-
-      // Charger les candidats
-      const { data: candidatesData } = await supabase
-        .from('candidates')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      setCandidates(candidatesData || []);
-
-      // Charger les offres d'emploi
-      const { data: jobsData } = await supabase
-        .from('jobs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      setJobs(jobsData || []);
-
-      // Charger les paiements
-      const { data: paymentsData } = await supabase
-        .from('payments')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      setPayments(paymentsData || []);
-
-      // Charger les abonnements
-      const { data: subscriptionsData } = await supabase
-        .from('user_subscriptions')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-      setSubscriptions(subscriptionsData || []);
+      setUsers(usersResult.data || []);
+      setCompanies(companiesResult.data || []);
+      setCandidates(candidatesResult.data || []);
+      setJobs(jobsResult.data || []);
+      setPayments(paymentsResult.data || []);
+      setSubscriptions(subscriptionsResult.data || []);
 
     } catch (error) {
       console.error('Error loading business data:', error);
@@ -380,68 +391,81 @@ const AdminDashboard = () => {
 
   const loadStats = async () => {
     try {
-      // Compter les utilisateurs
-      const { count: usersCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      // Exécuter toutes les requêtes en parallèle pour améliorer les performances
+      const [
+        usersResult,
+        companiesResult,
+        jobsResult,
+        candidatesResult,
+        paymentsResult,
+        revenueResult,
+        subscriptionsResult,
+        adminsResult,
+        pendingResult
+      ] = await Promise.all([
+        // Compter les utilisateurs
+        supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true }),
+        
+        // Compter les entreprises
+        supabase
+          .from('companies')
+          .select('*', { count: 'exact', head: true }),
+        
+        // Compter les offres d'emploi
+        supabase
+          .from('jobs')
+          .select('*', { count: 'exact', head: true }),
+        
+        // Compter les candidats
+        supabase
+          .from('candidates')
+          .select('*', { count: 'exact', head: true }),
+        
+        // Compter les paiements
+        supabase
+          .from('payments')
+          .select('*', { count: 'exact', head: true }),
+        
+        // Calculer le revenu total
+        supabase
+          .from('payments')
+          .select('amount')
+          .eq('status', 'completed'),
+        
+        // Compter les abonnements actifs
+        supabase
+          .from('user_subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'active'),
+        
+        // Compter les administrateurs actifs
+        supabase
+          .from('administrators')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true),
+        
+        // Compter les approbations en attente
+        supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', false)
+      ]);
 
-      // Compter les entreprises
-      const { count: companiesCount } = await supabase
-        .from('companies')
-        .select('*', { count: 'exact', head: true });
-
-      // Compter les offres d'emploi
-      const { count: jobsCount } = await supabase
-        .from('jobs')
-        .select('*', { count: 'exact', head: true });
-
-      // Compter les candidats
-      const { count: candidatesCount } = await supabase
-        .from('candidates')
-        .select('*', { count: 'exact', head: true });
-
-      // Compter les paiements
-      const { count: paymentsCount } = await supabase
-        .from('payments')
-        .select('*', { count: 'exact', head: true });
-
-      // Calculer le revenu total
-      const { data: revenueData } = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('status', 'completed');
-
-      const totalRevenue = revenueData?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0;
-
-      // Compter les abonnements actifs
-      const { count: activeSubsCount } = await supabase
-        .from('user_subscriptions')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
-
-      // Compter les administrateurs actifs
-      const { count: adminsCount } = await supabase
-        .from('administrators')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
-
-      // Compter les approbations en attente
-      const { count: pendingCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', false);
+      const totalRevenue = revenueResult.data?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0;
 
       setStats({
-        totalUsers: usersCount || 0,
-        totalCompanies: companiesCount || 0,
-        totalJobs: jobsCount || 0,
-        totalCandidates: candidatesCount || 0,
-        totalPayments: paymentsCount || 0,
+        totalUsers: usersResult.count || 0,
+        totalCompanies: companiesResult.count || 0,
+        totalJobs: jobsResult.count || 0,
+        totalCandidates: candidatesResult.count || 0,
+        totalPayments: paymentsResult.count || 0,
         totalRevenue,
-        activeSubscriptions: activeSubsCount || 0,
-        activeAdmins: adminsCount || 0,
+        activeSubscriptions: subscriptionsResult.count || 0,
+        activeAdmins: adminsResult.count || 0,
         recentLogs: adminLogs.length,
-        pendingApprovals: pendingCount || 0
+        pendingApprovals: pendingResult.count || 0
       });
 
     } catch (error) {

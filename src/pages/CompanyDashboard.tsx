@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,8 @@ import {
 
 const CompanyDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [companyName, setCompanyName] = useState("TechCorp");
+  const [user, setUser] = useState<any>(null);
 
   const jobOffers = [
     { id: 1, title: "Développeur Frontend", status: "Active", applications: 25, views: 120, published: "2024-01-15" },
@@ -39,9 +42,48 @@ const CompanyDashboard = () => {
 
   const services = [
     { id: 1, service: "Audit RH", consultant: "Dao Gniré Mah", status: "En cours", budget: 2500 },
-    { id: 2, service: "Formation Management", consultant: "Aïssa DIN", status: "Planifié", budget: 1800 },
-    { id: 3, service: "Recrutement", consultant: "NovRH Team", status: "Terminé", budget: 3200 }
+    { id: 2, service: "Formation Management", specialist: "Aïssa DIN", status: "Planifié", budget: 1800 },
+    { id: 3, service: "Recrutement", specialist: "NovRH Team", status: "Terminé", budget: 3200 }
   ];
+
+  // Récupérer le nom de l'entreprise depuis la base de données
+  useEffect(() => {
+    const getCompanyInfo = async () => {
+      try {
+        // Récupérer l'utilisateur actuel
+        const { data: { user }, } = await supabase.auth.getUser();
+        setUser(user);
+
+        if (user) {
+          // Récupérer les infos de l'entreprise
+          const { data: companyData, error } = await supabase
+            .from('companies')
+            .select('company_name')
+            .eq('user_id', user.id)
+            .single();
+
+          if (!error && companyData) {
+            setCompanyName(companyData.company_name);
+          } else {
+            // Fallback au profil si pas de données entreprise
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('first_name')
+              .eq('user_id', user.id)
+              .single();
+
+            if (profileData?.first_name) {
+              setCompanyName(profileData.first_name);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Erreur récupération entreprise:', error);
+      }
+    };
+
+    getCompanyInfo();
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -53,7 +95,7 @@ const CompanyDashboard = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-primary">Tableau de Bord Entreprise</h1>
-              <p className="text-muted-foreground">Bonjour TechCorp, gérez vos recrutements et services RH</p>
+              <p className="text-muted-foreground">Bonjour {companyName}, gérez vos recrutements et services RH</p>
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="outline" size="sm">

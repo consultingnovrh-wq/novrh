@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Dashboard Navigation</title>
+</head>
+<body>
+    <h1>Debug : Pourquoi la navigation va vers /login</h1>
+    
+    <h2>Problèmes possibles :</h2>
+    
+    <ol>
+        <li><strong>Route protection :</strong> Les routes `/dashboard/company` et `/candidate-dashboard` peuvent avoir des <code>ProtectedRoute</code> qui redirigent vers login</li>
+        
+        <li><strong>Redirection automatique :</strong> Quelque part dans le code, il y a peut-être une redirection automatique vers login</li>
+        
+        <li><strong>État utilisateur perdu :</strong> L'état d'authentification peut être perdu lors de la navigation</li>
+        
+        <li><strong>Hook useAdminSystem :</strong> Peut-être qu'il vérifie les permissions et redirige</li>
+    </ol>
+    
+    <h2>Solutions :</h2>
+    
+    <ol>
+        <li>Vérifier s'il y a des <code>ProtectedRoute</code> dans App.tsx</li>
+        <li>Regarder si CompanyDashboard ou CandidateDashboard ont des useEffect qui redirigent</li>
+        <li>Ajouter des console.log pour tracer l'état utilisateur</li>
+    </ol>
+    
+    <h2>Test :</h2>
+    <ol>
+        <li>Connectez-vous comme entreprise</li>
+        <li>Allez sur le dashboard général (/dashboard)</li>
+        <li>Cliquez "Mon Profil" → Accéder</li>
+        <li>Regardez la console pour voir les logs de navigation</li>
+    </ol>
+</body>
+</html>

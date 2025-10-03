@@ -200,50 +200,103 @@ const AdminUsers = () => {
     }
   };
 
+  const exportUsers = () => {
+    try {
+      // Préparer les données pour l'export CSV
+      const csvData = users.map(user => ({
+        'Nom': user.first_name || '',
+        'Prénom': user.last_name || '',
+        'Email': user.email,
+        'Type': user.user_type,
+        'Statut': user.is_active ? 'Actif' : 'Inactif',
+        'Email vérifié': user.email_verified ? 'Oui' : 'Non',
+        'Date création': new Date(user.created_at).toLocaleDateString('fr-FR'),
+        'Dernière connexion': user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('fr-FR') : 'Jamais'
+      }));
+
+      // Créer le CSV
+      const headers = Object.keys(csvData[0]).join(',');
+      const rows = csvData.map(row => Object.values(row).map(value => `"${value}"`).join(','));
+      const csvContent = [headers, ...rows].join('\n');
+
+      // Créer et télécharger le fichier
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `utilisateurs-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Export réussi ✅",
+        description: `Liste de ${csvData.length} utilisateurs exportée avec succès.`,
+      });
+    } catch (error) {
+      console.error('Erreur export:', error);
+      toast({
+        title: "Erreur d'export ❌",
+        description: "Impossible d'exporter la liste des utilisateurs.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const loadUsers = async () => {
     try {
-      // Charger les utilisateurs
-      const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Exécuter toutes les requêtes en parallèle pour améliorer les performances
+      const [
+        usersResult,
+        companiesResult,
+        candidatesResult
+      ] = await Promise.all([
+        // Charger les utilisateurs
+        supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        
+        // Charger les entreprises
+        supabase
+          .from('companies')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        
+        // Charger les candidats
+        supabase
+          .from('candidates')
+          .select('*')
+          .order('created_at', { ascending: false })
+      ]);
 
-      if (usersError) {
-        console.error('Error loading users:', usersError);
-        throw usersError;
+      if (usersResult.error) {
+        console.error('Error loading users:', usersResult.error);
+        throw usersResult.error;
       }
 
-      setUsers(usersData || []);
-
-      // Charger les entreprises
-      const { data: companiesData, error: companiesError } = await supabase
-        .from('companies')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (companiesError) {
-        console.error('Error loading companies:', companiesError);
+      if (companiesResult.error) {
+        console.error('Error loading companies:', companiesResult.error);
       }
 
-      setCompanies(companiesData || []);
-
-      // Charger les candidats
-      const { data: candidatesData, error: candidatesError } = await supabase
-        .from('candidates')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (candidatesError) {
-        console.error('Error loading candidates:', candidatesError);
+      if (candidatesResult.error) {
+        console.error('Error loading candidates:', candidatesResult.error);
       }
 
-      setCandidates(candidatesData || []);
+      const usersData = usersResult.data || [];
+      const companiesData = companiesResult.data || [];
+      const candidatesData = candidatesResult.data || [];
+
+      setUsers(usersData);
+      setCompanies(companiesData);
+      setCandidates(candidatesData);
 
       // Calculer les statistiques
-      const totalUsers = usersData?.length || 0;
-      const activeUsers = usersData?.filter(u => u.is_active).length || 0;
-      const verifiedUsers = usersData?.filter(u => u.email_verified).length || 0;
-      const pendingUsers = usersData?.filter(u => !u.is_active).length || 0;
+      const totalUsers = usersData.length;
+      const activeUsers = usersData.filter(u => u.is_active).length;
+      const verifiedUsers = usersData.filter(u => u.email_verified).length;
+      const pendingUsers = usersData.filter(u => !u.is_active).length;
 
       setStats({
         totalUsers,
@@ -477,7 +530,7 @@ const AdminUsers = () => {
                     <Plus className="w-4 h-4 mr-2" />
                     Nouvel utilisateur
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={exportUsers}>
                     <Download className="w-4 h-4 mr-2" />
                     Exporter
                   </Button>

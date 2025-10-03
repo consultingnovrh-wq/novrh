@@ -204,38 +204,47 @@ const AdminDashboard = () => {
 
   const loadStats = async () => {
     try {
-      // Compter les utilisateurs
-      const { count: usersCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // Compter les entreprises
-      const { count: companiesCount } = await supabase
-        .from('companies')
-        .select('*', { count: 'exact', head: true });
-
-      // Compter les offres d'emploi
-      const { count: jobsCount } = await supabase
-        .from('jobs')
-        .select('*', { count: 'exact', head: true });
-
-      // Compter les candidats
-      const { count: candidatesCount } = await supabase
-        .from('candidates')
-        .select('*', { count: 'exact', head: true });
-
-      // Compter les administrateurs actifs
-      const { count: adminsCount } = await supabase
-        .from('administrators')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true);
+      // Exécuter toutes les requêtes en parallèle pour améliorer les performances
+      const [
+        usersResult,
+        companiesResult,
+        jobsResult,
+        candidatesResult,
+        adminsResult
+      ] = await Promise.all([
+        // Compter les utilisateurs
+        supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true }),
+        
+        // Compter les entreprises
+        supabase
+          .from('companies')
+          .select('*', { count: 'exact', head: true }),
+        
+        // Compter les offres d'emploi
+        supabase
+          .from('jobs')
+          .select('*', { count: 'exact', head: true }),
+        
+        // Compter les candidats
+        supabase
+          .from('candidates')
+          .select('*', { count: 'exact', head: true }),
+        
+        // Compter les administrateurs actifs
+        supabase
+          .from('administrators')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true)
+      ]);
 
       setStats({
-        totalUsers: usersCount || 0,
-        totalCompanies: companiesCount || 0,
-        totalJobs: jobsCount || 0,
-        totalCandidates: candidatesCount || 0,
-        activeAdmins: adminsCount || 0,
+        totalUsers: usersResult.count || 0,
+        totalCompanies: companiesResult.count || 0,
+        totalJobs: jobsResult.count || 0,
+        totalCandidates: candidatesResult.count || 0,
+        activeAdmins: adminsResult.count || 0,
         recentLogs: adminLogs.length
       });
 
