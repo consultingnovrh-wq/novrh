@@ -393,7 +393,7 @@ const PostJob = () => {
                         id="contactPhone"
                         value={jobData.contactPhone}
                         onChange={(e) => handleInputChange('contactPhone', e.target.value)}
-                        placeholder="+223 XX XX XX XX"
+                        placeholder="+223 76 72 24 47"
                       />
                     </div>
                   </div>

@@ -173,7 +173,7 @@ export const WelcomeEmailTemplate = ({
                 <h4 style="color: #00167a; margin-top: 0;">Besoin d'aide ?</h4>
                 <p>Notre équipe est là pour vous accompagner :</p>
                 <p>📧 Email : contact@novrhconsulting.com</p>
-                <p>📞 Téléphone : +223 XX XX XX XX</p>
+                <p>📞 Téléphone : +223 76 72 24 47</p>
                 <p>🌐 Site web : www.novrhconsulting.com</p>
             </div>
         </div>

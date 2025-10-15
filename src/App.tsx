@@ -39,6 +39,9 @@ import AdminTeam from "./pages/AdminTeam";
 import AdminReports from "./pages/AdminReports";
 import AdminSettings from "./pages/AdminSettings";
 import AdminPayments from "./pages/AdminPayments";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +55,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
+          <Route path="/team" element={<Team />} />
           <Route path="/services" element={<Services />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
@@ -77,6 +81,10 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/student-services" element={<StudentServices />} />
           <Route path="/company-services" element={<CompanyServices />} />
+          
+          {/* Pages légales */}
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
           
           {/* Routes d'administration */}
           <Route path="/admin" element={<AdminDashboard />} />

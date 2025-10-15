@@ -2,20 +2,42 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Mail, Phone } from "lucide-react";
 
 const About = () => {
   const teamMembers = [
     {
+      name: "Zainabou Chérif HAIDARA",
+      domain: "Ressources Humaines",
+      profession: "Ingénieure RH et Fondatrice",
+      email: "zainabou-c.haidara@novrhconsulting.com",
+      expertise: ["Direction RH", "Stratégie RH", "Management d'équipe", "Développement organisationnel"]
+    },
+    {
       name: "Dao Gniré Mah",
       domain: "Ressources Humaines",
       profession: "Chargée RH",
-      expertise: ["Recrutement", "Gestion administrative", "Sujets RH"]
+      email: "mah-g.dao@novrhconsulting.com",
+      expertise: ["Recrutement", "Gestion administrative", "Sujets RH", "Administration du personnel"]
     },
     {
       name: "Aïssa DIN",
       domain: "Qualité, Hygiène, Sécurité, Environnement (QHSE) et RSE",
       profession: "Expert QHSE",
-      expertise: ["Mise en place de systèmes QSE", "Santé et sécurité au travail", "Suivi des indicateurs", "RSE et développement durable"]
+      email: "aissa.d@novrhconsulting.com",
+      expertise: [
+        "Mise en place de systèmes de management QSE",
+        "Santé et sécurité au travail (SST)",
+        "Suivi des indicateurs",
+        "RSE et développement durable",
+        "Audits internes et conformité réglementaire",
+        "Gestion des risques et plan de continuité d'activité (PCA)",
+        "Sensibilisation et formation du personnel aux bonnes pratiques QHSE",
+        "Sensibilisation SST",
+        "Évaluation des risques professionnels",
+        "Gestion de crise"
+      ]
     }
   ];
 
@@ -87,29 +109,65 @@ const About = () => {
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-center mb-12">Notre Équipe d'Experts</h2>
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {teamMembers.map((member, index) => (
-                  <Card key={index} className="bg-white">
+                  <Card key={index} className="bg-white hover:shadow-lg transition-shadow">
                     <CardContent className="p-8">
-                      <h3 className="text-2xl font-bold mb-2 text-primary">{member.name}</h3>
-                      <p className="text-lg font-semibold mb-4 text-muted-foreground">{member.profession}</p>
-                      <div className="mb-6">
-                        <h4 className="font-semibold mb-2">Domaine d'expertise:</h4>
-                        <p className="text-sm text-muted-foreground">{member.domain}</p>
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-bold mb-2 text-primary">{member.name}</h3>
+                        <p className="text-base font-semibold mb-3 text-muted-foreground">{member.profession}</p>
+                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                          <Mail className="w-4 h-4" />
+                          <span>{member.email}</span>
+                        </div>
                       </div>
+                      
+                      <div className="mb-6">
+                        <h4 className="font-semibold mb-2 text-sm">Domaine d'expertise:</h4>
+                        <p className="text-xs text-muted-foreground">{member.domain}</p>
+                      </div>
+                      
                       <div>
-                        <h4 className="font-semibold mb-3">Compétences:</h4>
-                        <div className="flex flex-wrap gap-2">
+                        <h4 className="font-semibold mb-3 text-sm">Compétences:</h4>
+                        <div className="flex flex-wrap gap-1">
                           {member.expertise.map((skill, skillIndex) => (
-                            <Badge key={skillIndex} variant="secondary">
+                            <Badge key={skillIndex} variant="secondary" className="text-xs">
                               {skill}
                             </Badge>
                           ))}
                         </div>
                       </div>
+                      
+                      <div className="mt-6 pt-4 border-t">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => window.location.href = `mailto:${member.email}`}
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          Contacter
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+              
+              {/* Contact général */}
+              <div className="mt-12 text-center">
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-bold mb-4 text-primary">Contact Général</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Pour toute question ou demande d'information, n'hésitez pas à nous contacter
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <Mail className="w-5 h-5 text-primary" />
+                      <span className="font-semibold">contact@novrhconsulting.com</span>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>

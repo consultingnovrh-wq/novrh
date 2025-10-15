@@ -218,7 +218,7 @@ const AddTender = () => {
                       type="tel"
                       value={formData.contactPhone}
                       onChange={(e) => setFormData(prev => ({ ...prev, contactPhone: e.target.value }))}
-                      placeholder="+223 XX XX XX XX"
+                      placeholder="+223 76 72 24 47"
                     />
                   </div>
                 </div>

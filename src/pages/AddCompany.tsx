@@ -151,7 +151,7 @@ const AddCompany = () => {
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="+223 XX XX XX XX"
+                        placeholder="+223 76 72 24 47"
                       />
                     </div>
                     <div className="space-y-2">

@@ -426,7 +426,7 @@ const AddCV = () => {
                       value={cvData.personalInfo.phone}
                       onChange={(e) => handlePersonalInfoChange('phone', e.target.value)}
                       disabled={!editing}
-                      placeholder="+223 XX XX XX XX"
+                      placeholder="+223 76 72 24 47"
                     />
                   </div>
                   <div className="md:col-span-2">
