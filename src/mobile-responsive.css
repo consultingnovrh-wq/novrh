@@ -1,0 +1,421 @@
+/* Améliorations de responsivité mobile pour NovRH */
+
+/* Classes utilitaires pour mobile */
+@media (max-width: 768px) {
+  /* Améliorer la lisibilité sur mobile */
+  .text-responsive {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  
+  /* Espacement réduit sur mobile */
+  .space-mobile {
+    gap: 0.75rem;
+  }
+  
+  /* Padding réduit sur mobile */
+  .padding-mobile {
+    padding: 1rem;
+  }
+  
+  /* Marges réduites sur mobile */
+  .margin-mobile {
+    margin: 0.5rem;
+  }
+  
+  /* Boutons pleine largeur sur mobile */
+  .btn-mobile-full {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Grilles adaptatives */
+  .grid-mobile {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* Cartes empilées sur mobile */
+  .card-mobile {
+    margin-bottom: 1rem;
+  }
+  
+  /* Navigation mobile améliorée */
+  .nav-mobile {
+    padding: 0.75rem;
+  }
+  
+  /* Texte centré sur mobile */
+  .text-center-mobile {
+    text-align: center;
+  }
+  
+  /* Masquer certains éléments sur mobile */
+  .hide-mobile {
+    display: none;
+  }
+  
+  /* Afficher seulement sur mobile */
+  .show-mobile {
+    display: block;
+  }
+}
+
+/* Classes utilitaires pour tablette */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hide-tablet {
+    display: none;
+  }
+  
+  .show-tablet {
+    display: block;
+  }
+  
+  .grid-tablet {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Classes utilitaires pour desktop */
+@media (min-width: 1025px) {
+  .hide-desktop {
+    display: none;
+  }
+  
+  .show-desktop {
+    display: block;
+  }
+  
+  .grid-desktop {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Améliorations spécifiques pour les composants */
+
+/* Hero Section mobile */
+@media (max-width: 768px) {
+  .hero-mobile {
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+  
+  .hero-mobile h1 {
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  
+  .hero-mobile p {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hero-mobile .btn-group {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+/* Job Search Section mobile */
+@media (max-width: 768px) {
+  .job-search-mobile {
+    padding: 1.5rem 1rem;
+  }
+  
+  .job-search-mobile .search-form {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .job-search-mobile .search-form > div {
+    width: 100%;
+  }
+  
+  .job-search-mobile .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .job-search-mobile .job-cards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Cards responsive */
+@media (max-width: 768px) {
+  .card-mobile-responsive {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .card-mobile-responsive .card-header {
+    padding-bottom: 0.75rem;
+  }
+  
+  .card-mobile-responsive .card-content {
+    padding-top: 0.75rem;
+  }
+  
+  .card-mobile-responsive h3 {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+  
+  .card-mobile-responsive p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+}
+
+/* Forms responsive */
+@media (max-width: 768px) {
+  .form-mobile-responsive {
+    padding: 1rem;
+  }
+  
+  .form-mobile-responsive .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-mobile-responsive .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .form-mobile-responsive .form-row > div {
+    width: 100%;
+  }
+  
+  .form-mobile-responsive .btn-group {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .form-mobile-responsive .btn-group button {
+    width: 100%;
+  }
+}
+
+/* Navigation mobile améliorée */
+@media (max-width: 768px) {
+  .nav-mobile-responsive {
+    padding: 1rem;
+  }
+  
+  .nav-mobile-responsive .nav-links {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .nav-mobile-responsive .nav-links a {
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    text-align: center;
+  }
+  
+  .nav-mobile-responsive .user-menu {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Footer mobile */
+@media (max-width: 768px) {
+  .footer-mobile-responsive {
+    padding: 2rem 1rem;
+  }
+  
+  .footer-mobile-responsive .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    text-align: center;
+  }
+  
+  .footer-mobile-responsive .footer-section {
+    margin-bottom: 1.5rem;
+  }
+  
+  .footer-mobile-responsive .social-links {
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .footer-mobile-responsive .contact-info {
+    text-align: center;
+  }
+}
+
+/* Modals et overlays mobile */
+@media (max-width: 768px) {
+  .modal-mobile-responsive {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+  }
+  
+  .modal-mobile-responsive .modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .modal-mobile-responsive .modal-content {
+    padding: 1rem;
+  }
+  
+  .modal-mobile-responsive .modal-footer {
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .modal-mobile-responsive .modal-footer button {
+    width: 100%;
+  }
+}
+
+/* Tables responsive */
+@media (max-width: 768px) {
+  .table-mobile-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .table-mobile-responsive table {
+    min-width: 600px;
+  }
+  
+  .table-mobile-responsive th,
+  .table-mobile-responsive td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Améliorations de performance mobile */
+@media (max-width: 768px) {
+  /* Réduire les animations sur mobile pour améliorer les performances */
+  .reduce-motion {
+    animation-duration: 0.1s;
+    transition-duration: 0.1s;
+  }
+  
+  /* Optimiser les images pour mobile */
+  .img-mobile-optimized {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Réduire les ombres sur mobile */
+  .shadow-mobile {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Améliorations d'accessibilité mobile */
+@media (max-width: 768px) {
+  /* Augmenter la taille des zones tactiles */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Améliorer le contraste sur mobile */
+  .high-contrast-mobile {
+    color: #000;
+    background-color: #fff;
+  }
+  
+  /* Espacement suffisant entre les éléments interactifs */
+  .interactive-spacing {
+    margin-bottom: 1rem;
+  }
+}
+
+/* Classes utilitaires globales */
+.container-mobile {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.text-mobile-sm {
+  font-size: 0.875rem;
+}
+
+.text-mobile-base {
+  font-size: 1rem;
+}
+
+.text-mobile-lg {
+  font-size: 1.125rem;
+}
+
+.text-mobile-xl {
+  font-size: 1.25rem;
+}
+
+.space-mobile-sm {
+  gap: 0.5rem;
+}
+
+.space-mobile-md {
+  gap: 1rem;
+}
+
+.space-mobile-lg {
+  gap: 1.5rem;
+}
+
+.padding-mobile-sm {
+  padding: 0.5rem;
+}
+
+.padding-mobile-md {
+  padding: 1rem;
+}
+
+.padding-mobile-lg {
+  padding: 1.5rem;
+}
+
+.margin-mobile-sm {
+  margin: 0.5rem;
+}
+
+.margin-mobile-md {
+  margin: 1rem;
+}
+
+.margin-mobile-lg {
+  margin: 1.5rem;
+}
+
+/* Classes pour les breakpoints Tailwind */
+@media (max-width: 640px) {
+  .sm\:hidden {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .md\:hidden {
+    display: none;
+  }
+}
+
+@media (max-width: 1024px) {
+  .lg\:hidden {
+    display: none;
+  }
+}
+
+@media (max-width: 1280px) {
+  .xl\:hidden {
+    display: none;
+  }
+}

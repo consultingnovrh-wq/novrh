@@ -8,19 +8,19 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with dark blue color */}
-      <div className="absolute inset-0 bg-[#00167a]"></div>
+      <div className="absolute inset-0 bg-primary"></div>
       
       {/* Hero Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Left side - Text content */}
           <div className="text-white space-y-6">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
               Bienvenue chez{" "}
               <span className="block text-white">NovRH CONSULTING</span>
             </h1>
             
-            <div className="space-y-4 text-lg sm:text-xl">
+            <div className="space-y-4 text-base sm:text-lg md:text-xl">
               <p className="flex items-center">
                 <span className="mr-3">•</span>
                 Recruter autrement

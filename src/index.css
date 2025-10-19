@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import mobile responsive styles */
+@import './mobile-responsive.css';
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
@@ -17,9 +20,9 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 215 27% 61%; /* #859CB6 en HSL */
+    --primary: 221 83% 25%; /* Bleu fort et visible #00167a */
     --primary-foreground: 210 40% 98%;
-    --primary-glow: 215 27% 71%; /* version plus claire pour glow */
+    --primary-glow: 221 83% 35%; /* version plus claire pour glow */
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -27,7 +30,7 @@ All colors MUST be HSL.
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 221 83% 25%;
+    --accent: 221 83% 20%; /* Bleu encore plus foncé pour l'accent */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 84.2% 60.2%;

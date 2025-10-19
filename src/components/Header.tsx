@@ -56,6 +56,8 @@ const Header = () => {
   const navigation = [
     { name: "ACCUEIL", href: "/" },
     { name: "TARIFS", href: "/pricing" },
+    { name: "AVIS", href: "/reviews" },
+    { name: "DEVIS", href: "/quote-request" },
   ];
 
   const mobileMenuItems = [
@@ -81,6 +83,7 @@ const Header = () => {
       submenu: [
         { name: "Consulter les formations", href: "/formation" },
         { name: "Proposer une formation", href: "/add-formation" },
+        { name: "Établissement Formation", href: "/training-institution" },
       ]
     },
     {
@@ -337,14 +340,14 @@ const Header = () => {
                   </DrawerClose>
                 </DrawerHeader>
                 <nav className="flex flex-col gap-1 px-4 pb-4">
-                  <a href="/" className="text-base font-medium text-white hover:bg-[#00167a]/80 px-3 py-2 rounded transition-colors">ACCUEIL</a>
-                  <a href="/pricing" className="text-base font-medium text-white hover:bg-[#00167a]/80 px-3 py-2 rounded transition-colors">TARIFICATION</a>
+                  <a href="/" className="text-base font-medium text-white hover:bg-primary/80 px-3 py-2 rounded transition-colors">ACCUEIL</a>
+                  <a href="/pricing" className="text-base font-medium text-white hover:bg-primary/80 px-3 py-2 rounded transition-colors">TARIFICATION</a>
                   
                   {mobileMenuItems.map((item) => (
                     <div key={item.name}>
                       <button
                         onClick={() => toggleSubmenu(item.name)}
-                        className="w-full text-left text-base font-medium text-white hover:bg-[#00167a]/80 px-3 py-2 rounded transition-colors flex items-center justify-between"
+                        className="w-full text-left text-base font-medium text-white hover:bg-primary/80 px-3 py-2 rounded transition-colors flex items-center justify-between"
                       >
                         {item.name}
                         {item.submenu && (
@@ -362,7 +365,7 @@ const Header = () => {
                             <a
                               key={subItem.name}
                               href={subItem.href}
-                              className="block text-sm text-white/90 hover:bg-[#00167a]/60 px-3 py-2 rounded transition-colors"
+                              className="block text-sm text-white/90 hover:bg-primary/60 px-3 py-2 rounded transition-colors"
                             >
                               {subItem.name}
                             </a>

@@ -9,17 +9,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[#00167a] text-white hover:bg-[#00167a]/90 shadow-md hover:shadow-lg",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-[#00167a] text-[#00167a] bg-white hover:bg-[#00167a] hover:text-white",
+          "border border-primary text-primary bg-white hover:bg-primary hover:text-primary-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "bg-transparent text-[#00167a] hover:bg-[#00167a]/10 hover:text-[#00167a]",
-        link: "text-[#00167a] underline-offset-4 hover:underline hover:text-[#00167a]/80",
-        hero: "bg-[#00167a] text-white hover:bg-[#00167a]/90 transform hover:scale-105",
-        cta: "bg-[#00167a] text-white hover:bg-[#00167a]/90 shadow-elegant hover:shadow-glow",
+        ghost: "bg-transparent text-primary hover:bg-primary/10 hover:text-primary",
+        link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
+        hero: "bg-primary text-primary-foreground hover:bg-primary/90 transform hover:scale-105",
+        cta: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-elegant hover:shadow-glow",
       },
       size: {
         default: "h-10 px-4 py-2",

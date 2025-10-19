@@ -5,11 +5,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Briefcase, Clock, Users, TrendingUp } from "lucide-react";
+import { useRealStats } from "@/hooks/use-real-stats";
 
 const JobSearchSection = () => {
   const [searchKeywords, setSearchKeywords] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
+  const { stats, loading: statsLoading, formatNumber } = useRealStats();
 
   const jobCategories = [
     "Toutes spécialités",
@@ -63,11 +65,11 @@ const JobSearchSection = () => {
     }
   ];
 
-  const stats = [
-    { icon: <Briefcase className="w-6 h-6" />, value: "2,847", label: "Offres d'emploi" },
-    { icon: <Users className="w-6 h-6" />, value: "15,892", label: "Candidats inscrits" },
-    { icon: <TrendingUp className="w-6 h-6" />, value: "1,234", label: "Recrutements réussis" },
-    { icon: <Clock className="w-6 h-6" />, value: "48h", label: "Temps moyen de réponse" }
+  const statsData = [
+    { icon: <Briefcase className="w-6 h-6" />, value: formatNumber(stats.totalJobs), label: "Offres d'emploi" },
+    { icon: <Users className="w-6 h-6" />, value: formatNumber(stats.totalCandidates), label: "Candidats inscrits" },
+    { icon: <TrendingUp className="w-6 h-6" />, value: formatNumber(stats.successfulRecruitments), label: "Recrutements réussis" },
+    { icon: <Clock className="w-6 h-6" />, value: stats.averageResponseTime, label: "Temps moyen de réponse" }
   ];
 
   return (
@@ -75,19 +77,19 @@ const JobSearchSection = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#00167a] mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
             Trouvez votre emploi idéal
           </h2>
-          <p className="text-lg text-[#00167a]/80 max-w-2xl mx-auto">
+          <p className="text-lg text-primary/80 max-w-2xl mx-auto">
             Découvrez des milliers d'opportunités d'emploi en Afrique de l'Ouest avec notre plateforme de recrutement moderne
           </p>
         </div>
 
         {/* Search Bar */}
-        <div className="max-w-5xl mx-auto mb-12">
-          <Card className="p-6 shadow-elegant">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
+        <div className="max-w-5xl mx-auto mb-8 md:mb-12">
+          <Card className="p-4 md:p-6 shadow-elegant">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              <div className="sm:col-span-2 md:col-span-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
@@ -164,25 +166,25 @@ const JobSearchSection = () => {
         </div>
 
                           {/* Stats */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-                    {stats.map((stat, index) => (
-                      <Card key={index} className="text-center p-6 hover:shadow-lg transition-shadow">
-                        <div className="flex justify-center mb-3 text-[#00167a]">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
+                    {statsData.map((stat, index) => (
+                      <Card key={index} className="text-center p-3 md:p-6 hover:shadow-lg transition-shadow">
+                        <div className="flex justify-center mb-3 text-primary">
                           {stat.icon}
                         </div>
-                        <div className="text-2xl font-bold text-[#00167a] mb-1">{stat.value}</div>
-                        <div className="text-sm text-[#00167a]/80">{stat.label}</div>
+                        <div className="text-lg md:text-2xl font-bold text-primary mb-1">{stat.value}</div>
+                        <div className="text-xs md:text-sm text-primary/80">{stat.label}</div>
                       </Card>
                     ))}
                   </div>
 
         {/* Featured Jobs */}
-        <div className="max-w-4xl mx-auto">
-          <h3 className="text-2xl font-bold text-center mb-8 text-[#00167a]">Offres à la Une</h3>
-          <div className="grid gap-6">
+        <div className="max-w-6xl mx-auto">
+          <h3 className="text-xl md:text-2xl font-bold text-center mb-6 md:mb-8 text-primary">Offres à la Une</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {featuredJobs.map((job, index) => (
               <Card key={index} className="hover:shadow-elegant transition-all duration-300 hover:scale-[1.02]">
-                <CardContent className="p-6">
+                <CardContent className="p-4 md:p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">

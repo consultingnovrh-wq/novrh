@@ -16,9 +16,12 @@ const Footer = () => {
     platform: [
       { name: "Espace Candidats", href: "#" },
       { name: "Espace Entreprises", href: "#" },
-      { name: "CVthèque", href: "#" },
-      { name: "Offres d'emploi", href: "#" },
-      { name: "Micro-formations", href: "#" }
+      { name: "CVthèque", href: "/cvtheque" },
+      { name: "Offres d'emploi", href: "/jobs" },
+      { name: "Abonnement Recruteur", href: "/recruiter-subscription" },
+      { name: "Établissement Formation", href: "/training-institution" },
+      { name: "Demande de devis", href: "/quote-request" },
+      { name: "Avis clients", href: "/reviews" }
     ],
     support: [
       { name: "Centre d'aide", href: "#" },
@@ -38,7 +41,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-[hsl(221,83%,25%)] text-white">
+    <footer className="bg-primary text-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
         <div className="py-16">

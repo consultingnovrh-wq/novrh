@@ -39,6 +39,11 @@ import AdminTeam from "./pages/AdminTeam";
 import AdminReports from "./pages/AdminReports";
 import AdminSettings from "./pages/AdminSettings";
 import AdminPayments from "./pages/AdminPayments";
+import AdminQuoteRequests from "./pages/AdminQuoteRequests";
+import QuoteRequest from "./pages/QuoteRequest";
+import RecruiterSubscription from "./pages/RecruiterSubscription";
+import TrainingInstitution from "./pages/TrainingInstitution";
+import Reviews from "./pages/Reviews";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Team from "./pages/Team";
@@ -82,6 +87,12 @@ const App = () => (
           <Route path="/student-services" element={<StudentServices />} />
           <Route path="/company-services" element={<CompanyServices />} />
           
+          {/* Nouvelles fonctionnalités */}
+          <Route path="/quote-request" element={<QuoteRequest />} />
+          <Route path="/recruiter-subscription" element={<RecruiterSubscription />} />
+          <Route path="/training-institution" element={<TrainingInstitution />} />
+          <Route path="/reviews" element={<Reviews />} />
+          
           {/* Pages légales */}
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
@@ -114,6 +125,12 @@ const App = () => (
           <Route path="/admin/payments/pending" element={<AdminPayments />} />
           <Route path="/admin/payments/failed" element={<AdminPayments />} />
           <Route path="/admin/payments/refunded" element={<AdminPayments />} />
+          
+          {/* Gestion des demandes de devis */}
+          <Route path="/admin/quote-requests" element={<AdminQuoteRequests />} />
+          <Route path="/admin/quote-requests/all" element={<AdminQuoteRequests />} />
+          <Route path="/admin/quote-requests/pending" element={<AdminQuoteRequests />} />
+          <Route path="/admin/quote-requests/completed" element={<AdminQuoteRequests />} />
           
           {/* Gestion des entreprises */}
           <Route path="/admin/companies" element={<AdminCompanies />} />
