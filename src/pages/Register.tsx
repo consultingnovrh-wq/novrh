@@ -232,18 +232,16 @@ const Register = () => {
           // Continuer même si l'email échoue
         }
 
-        // Déconnecter l'utilisateur après l'inscription
-        await supabase.auth.signOut();
-        
+        // Ne pas déconnecter l'utilisateur, le rediriger directement
         setSuccess(true);
         toast({
           title: "Inscription réussie ! 🎉",
-          description: "Votre compte candidat a été créé avec succès. Veuillez vous connecter avec vos identifiants.",
+          description: "Votre compte candidat a été créé avec succès. Vous allez être redirigé vers votre tableau de bord.",
         });
 
-        // Rediriger vers la page de login après 2 secondes
+        // Rediriger vers le dashboard candidat après un court délai
         setTimeout(() => {
-          navigate("/login");
+          navigate('/candidate-dashboard');
         }, 2000);
       }
     } catch (error: any) {
@@ -340,19 +338,17 @@ const Register = () => {
           // Continuer même si l'email échoue
         }
 
-        // Déconnecter l'utilisateur après l'inscription
-        await supabase.auth.signOut();
-        
+        // Ne pas déconnecter l'utilisateur, le rediriger directement
         setSuccess(true);
         toast({
           title: "Inscription réussie ! 🎉",
-          description: "Votre compte entreprise a été créé avec succès. Veuillez vous connecter avec vos identifiants.",
+          description: "Votre compte entreprise a été créé avec succès. Vous allez être redirigé vers votre tableau de bord.",
         });
 
-        // Rediriger vers la page de login après 2 secondes
+        // Rediriger vers le dashboard entreprise après un court délai
         setTimeout(() => {
-          navigate("/login");
-        }, 3000);
+          navigate('/dashboard/company');
+        }, 2000);
       }
     } catch (error: any) {
       console.error('Erreur lors de l\'inscription:', error);

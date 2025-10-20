@@ -59,6 +59,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
+import AddAdminModal from "@/components/AddAdminModal";
 
 // Types pour les données
 interface User {
@@ -1034,6 +1035,16 @@ const AdminDashboard = () => {
           </div>
         </main>
       </div>
+
+      {/* Modales */}
+      <AddAdminModal 
+        isOpen={showCreateAdmin} 
+        onClose={() => setShowCreateAdmin(false)} 
+        onAdminAdded={() => {
+          loadAdministrators();
+          loadStats();
+        }} 
+      />
     </div>
   );
 };

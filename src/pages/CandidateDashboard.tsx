@@ -1,10 +1,15 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Eye, Clock, CheckCircle, XCircle, Plus, Search, BookOpen } from "lucide-react";
 
 const CandidateDashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const stats = [
     { title: "CV déposé", value: "1", icon: <FileText className="h-6 w-6" /> },
     { title: "Candidatures", value: "8", icon: <Eye className="h-6 w-6" /> },
@@ -46,6 +51,60 @@ const CandidateDashboard = () => {
       viewed: true
     }
   ];
+
+  // Vérifier l'authentification et le type d'utilisateur
+  useEffect(() => {
+    const checkUserAndRedirect = async () => {
+      try {
+        setLoading(true);
+        
+        // Récupérer l'utilisateur actuel
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          navigate('/login');
+          return;
+        }
+
+        // Vérifier le type d'utilisateur
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError || !profile) {
+          console.error('Erreur récupération profil:', profileError);
+          navigate('/login');
+          return;
+        }
+
+        // Rediriger si ce n'est pas un candidat
+        if (profile.user_type !== 'candidate') {
+          console.log('Utilisateur non-candidat détecté, redirection...');
+          switch (profile.user_type) {
+            case 'admin':
+              navigate('/admin');
+              break;
+            case 'company':
+              navigate('/dashboard/company');
+              break;
+            default:
+              navigate('/dashboard');
+              break;
+          }
+          return;
+        }
+      } catch (error) {
+        console.error('Erreur vérification utilisateur:', error);
+        navigate('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUserAndRedirect();
+  }, [navigate]);
 
   const recommendedJobs = [
     {
@@ -100,6 +159,17 @@ const CandidateDashboard = () => {
       status: "En cours"
     }
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement du tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

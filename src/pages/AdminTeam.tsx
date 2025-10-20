@@ -216,15 +216,6 @@ const AdminTeam = () => {
     }
   };
 
-  const handleAdminCreated = () => {
-    loadTeamMembers();
-    loadStats();
-    toast({
-      title: "Succès",
-      description: "Nouveau membre d'équipe ajouté avec succès",
-    });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -482,7 +473,14 @@ const AdminTeam = () => {
       </div>
 
       {/* Modal pour ajouter un membre */}
-      <AdminInviteModal onAdminCreated={handleAdminCreated} />
+      <AdminInviteModal 
+        isOpen={showAddMember}
+        onClose={() => setShowAddMember(false)}
+        onSuccess={() => {
+          loadTeamMembers();
+          loadStats();
+        }}
+      />
     </div>
   );
 };

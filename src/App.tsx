@@ -40,6 +40,7 @@ import AdminReports from "./pages/AdminReports";
 import AdminSettings from "./pages/AdminSettings";
 import AdminPayments from "./pages/AdminPayments";
 import AdminQuoteRequests from "./pages/AdminQuoteRequests";
+import AdminFormations from "./pages/AdminFormations";
 import QuoteRequest from "./pages/QuoteRequest";
 import RecruiterSubscription from "./pages/RecruiterSubscription";
 import TrainingInstitution from "./pages/TrainingInstitution";
@@ -180,7 +181,12 @@ const App = () => (
           <Route path="/admin/settings/database" element={<AdminSettings />} />
           
           {/* Autres routes d'administration (à implémenter) */}
-          <Route path="/admin/formations" element={<AdminDashboard />} />
+          <Route path="/admin/formations" element={<AdminFormations />} />
+          <Route path="/admin/formations/all" element={<AdminFormations />} />
+          <Route path="/admin/formations/active" element={<AdminFormations />} />
+          <Route path="/admin/formations/popular" element={<AdminFormations />} />
+          <Route path="/admin/formations/enrollments" element={<AdminFormations />} />
+          <Route path="/admin/formations/stats" element={<AdminFormations />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>

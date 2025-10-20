@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
+import AddSubscriptionModal from "@/components/AddSubscriptionModal";
 
 const AdminSubscriptions = () => {
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
@@ -32,6 +33,7 @@ const AdminSubscriptions = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showAddSubscription, setShowAddSubscription] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -242,7 +244,7 @@ const AdminSubscriptions = () => {
               <h1 className="text-3xl font-bold text-gray-900">Gestion des Abonnements</h1>
               <p className="text-gray-600">Gérez tous les abonnements et paiements de la plateforme</p>
             </div>
-            <Button className="flex items-center space-x-2">
+            <Button className="flex items-center space-x-2" onClick={() => setShowAddSubscription(true)}>
               <Plus className="w-4 h-4" />
               <span>Nouvel abonnement</span>
             </Button>
@@ -469,6 +471,16 @@ const AdminSubscriptions = () => {
           </Card>
         </main>
       </div>
+
+      {/* Modales */}
+      <AddSubscriptionModal 
+        isOpen={showAddSubscription} 
+        onClose={() => setShowAddSubscription(false)} 
+        onSubscriptionAdded={() => {
+          loadSubscriptions();
+          loadStats();
+        }} 
+      />
     </div>
   );
 };

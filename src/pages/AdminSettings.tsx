@@ -90,11 +90,36 @@ const AdminSettings = () => {
     try {
       setLoading(true);
       
-      // Ici vous pourriez charger les vraies données depuis Supabase
-      // const { data, error } = await supabase.from('system_settings').select('*');
-      
-      // Pour l'instant, on utilise les valeurs par défaut
-      
+      // Charger les paramètres depuis la base de données
+      const { data: settingsData, error } = await supabase
+        .from('site_settings')
+        .select('*');
+
+      if (error) {
+        console.error('Error loading settings:', error);
+        // Utiliser les valeurs par défaut si erreur
+        return;
+      }
+
+      if (settingsData && settingsData.length > 0) {
+        // Convertir les données de la base en format utilisable
+        const settings = settingsData.reduce((acc, setting) => {
+          acc[setting.setting_key] = setting.setting_value;
+          return acc;
+        }, {});
+
+        setGeneralSettings(prev => ({
+          ...prev,
+          siteName: settings.site_name || prev.siteName,
+          siteDescription: settings.site_description || prev.siteDescription,
+          siteUrl: settings.site_url || prev.siteUrl,
+          contactEmail: settings.contact_email || prev.contactEmail,
+          supportPhone: settings.support_phone || prev.supportPhone,
+          timezone: settings.timezone || prev.timezone,
+          language: settings.language || prev.language,
+          maintenanceMode: settings.maintenance_mode || prev.maintenanceMode
+        }));
+      }
     } catch (error) {
       console.error('Error loading settings:', error);
       toast({
@@ -111,11 +136,25 @@ const AdminSettings = () => {
     try {
       setLoading(true);
       
-      // Ici vous pourriez sauvegarder les vraies données dans Supabase
-      // const { error } = await supabase.from('system_settings').upsert(settings);
-      
-      // Simuler la sauvegarde
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (tab === 'general') {
+        // Sauvegarder les paramètres généraux
+        const settingsToSave = [
+          { setting_key: 'site_name', setting_value: generalSettings.siteName },
+          { setting_key: 'site_description', setting_value: generalSettings.siteDescription },
+          { setting_key: 'site_url', setting_value: generalSettings.siteUrl },
+          { setting_key: 'contact_email', setting_value: generalSettings.contactEmail },
+          { setting_key: 'support_phone', setting_value: generalSettings.supportPhone },
+          { setting_key: 'timezone', setting_value: generalSettings.timezone },
+          { setting_key: 'language', setting_value: generalSettings.language },
+          { setting_key: 'maintenance_mode', setting_value: generalSettings.maintenanceMode }
+        ];
+
+        const { error } = await supabase
+          .from('site_settings')
+          .upsert(settingsToSave);
+
+        if (error) throw error;
+      }
       
       toast({
         title: "Succès",

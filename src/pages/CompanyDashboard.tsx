@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,8 @@ const CompanyDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [companyName, setCompanyName] = useState("TechCorp");
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const jobOffers = [
     { id: 1, title: "Développeur Frontend", status: "Active", applications: 25, views: 120, published: "2024-01-15" },
@@ -46,44 +49,94 @@ const CompanyDashboard = () => {
     { id: 3, service: "Recrutement", specialist: "NovRH Team", status: "Terminé", budget: 3200 }
   ];
 
-  // Récupérer le nom de l'entreprise depuis la base de données
+  // Vérifier l'authentification et le type d'utilisateur
   useEffect(() => {
-    const getCompanyInfo = async () => {
+    const checkUserAndRedirect = async () => {
       try {
+        setLoading(true);
+        
         // Récupérer l'utilisateur actuel
-        const { data: { user }, } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          navigate('/login');
+          return;
+        }
+
         setUser(user);
 
-        if (user) {
-          // Récupérer les infos de l'entreprise
-          const { data: companyData, error } = await supabase
-            .from('companies')
-            .select('company_name')
+        // Vérifier le type d'utilisateur
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError || !profile) {
+          console.error('Erreur récupération profil:', profileError);
+          navigate('/login');
+          return;
+        }
+
+        // Rediriger si ce n'est pas une entreprise
+        if (profile.user_type !== 'company') {
+          console.log('Utilisateur non-entreprise détecté, redirection...');
+          switch (profile.user_type) {
+            case 'admin':
+              navigate('/admin');
+              break;
+            case 'candidate':
+              navigate('/candidate-dashboard');
+              break;
+            default:
+              navigate('/dashboard');
+              break;
+          }
+          return;
+        }
+
+        // Récupérer les infos de l'entreprise
+        const { data: companyData, error: companyError } = await supabase
+          .from('companies')
+          .select('company_name')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!companyError && companyData) {
+          setCompanyName(companyData.company_name);
+        } else {
+          // Fallback au profil si pas de données entreprise
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('first_name')
             .eq('user_id', user.id)
             .single();
 
-          if (!error && companyData) {
-            setCompanyName(companyData.company_name);
-          } else {
-            // Fallback au profil si pas de données entreprise
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('first_name')
-              .eq('user_id', user.id)
-              .single();
-
-            if (profileData?.first_name) {
-              setCompanyName(profileData.first_name);
-            }
+          if (profileData?.first_name) {
+            setCompanyName(profileData.first_name);
           }
         }
       } catch (error) {
-        console.error('Erreur récupération entreprise:', error);
+        console.error('Erreur vérification utilisateur:', error);
+        navigate('/login');
+      } finally {
+        setLoading(false);
       }
     };
 
-    getCompanyInfo();
-  }, []);
+    checkUserAndRedirect();
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement du tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
