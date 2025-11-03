@@ -47,6 +47,7 @@ import TrainingInstitution from "./pages/TrainingInstitution";
 import Reviews from "./pages/Reviews";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import Legal from "./pages/Legal";
 import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
 
@@ -97,6 +98,7 @@ const App = () => (
           {/* Pages légales */}
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/legal" element={<Legal />} />
           
           {/* Routes d'administration */}
           <Route path="/admin" element={<AdminDashboard />} />

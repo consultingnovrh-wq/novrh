@@ -42,32 +42,63 @@ const Login = () => {
 
   const redirectToDashboard = async (user: any) => {
     try {
+      console.log('🔄 Redirection en cours pour l\'utilisateur:', user.email);
+      
+      // Attendre un peu pour s'assurer que le profil est synchronisé
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Récupérer le type d'utilisateur depuis le profil
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('user_type')
+        .select('user_type, email_verified')
         .eq('user_id', user.id)
         .single();
 
+      if (profileError) {
+        console.error('❌ Erreur récupération profil:', profileError);
+        navigate('/dashboard');
+        return;
+      }
+
       if (profile) {
+        console.log('👤 Profil trouvé:', profile);
+        
+        // Vérifier si l'email est vérifié
+        if (!profile.email_verified) {
+          console.log('⚠️ Email non vérifié');
+          toast({
+            title: "Email non vérifié",
+            description: "Veuillez vérifier votre email avant de continuer.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Rediriger selon le type d'utilisateur
         switch (profile.user_type) {
           case 'admin':
+            console.log('🔑 Redirection vers admin');
             navigate('/admin');
             break;
           case 'company':
+            console.log('🏢 Redirection vers dashboard entreprise');
             navigate('/dashboard/company');
             break;
           case 'candidate':
-          default:
+            console.log('👤 Redirection vers dashboard candidat');
             navigate('/candidate-dashboard');
+            break;
+          default:
+            console.log('❓ Type utilisateur inconnu, redirection vers dashboard général');
+            navigate('/dashboard');
             break;
         }
       } else {
-        // Profil non trouvé, rediriger vers le dashboard général
+        console.log('❌ Profil non trouvé, redirection vers dashboard général');
         navigate('/dashboard');
       }
     } catch (error) {
-      console.error('Erreur lors de la récupération du profil:', error);
+      console.error('❌ Erreur lors de la récupération du profil:', error);
       navigate('/dashboard');
     }
   };

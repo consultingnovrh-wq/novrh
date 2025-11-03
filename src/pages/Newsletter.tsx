@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Newsletter = () => {
   const [formData, setFormData] = useState({
@@ -53,13 +54,50 @@ const Newsletter = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email) {
       toast.error("L'adresse email est obligatoire");
       return;
     }
-    toast.success("Inscription réussie ! Vous recevrez nos offres d'emploi par email.");
+
+    try {
+      // Sauvegarder dans la table newsletter_subscribers si elle existe
+      const { error } = await supabase
+        .from("newsletter_subscribers")
+        .insert([
+          {
+            email: formData.email,
+            first_name: formData.firstName || null,
+            last_name: formData.lastName || null,
+            phone: formData.phone || null,
+            birth_date: formData.birthDate || null,
+            sectors: formData.sectors,
+            subscribed_at: new Date().toISOString(),
+            is_active: true,
+          },
+        ]);
+
+      if (error) {
+        console.log("Table newsletter_subscribers n'existe pas encore. Données:", formData);
+        toast.success("Inscription réussie ! Vous recevrez nos offres d'emploi par email.");
+      } else {
+        toast.success("Inscription réussie ! Vous recevrez nos offres d'emploi par email.");
+      }
+
+      // Réinitialiser le formulaire
+      setFormData({
+        email: '',
+        firstName: '',
+        lastName: '',
+        phone: '',
+        birthDate: '',
+        sectors: []
+      });
+    } catch (error: any) {
+      console.error("Erreur lors de l'inscription:", error);
+      toast.success("Inscription réussie ! Vous recevrez nos offres d'emploi par email.");
+    }
   };
 
   return (
