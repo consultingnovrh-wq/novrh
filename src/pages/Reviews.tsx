@@ -1,95 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ServiceReviews from '@/components/ServiceReviews';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, MessageSquare, Users, Award, ThumbsUp } from 'lucide-react';
+import { Star, MessageSquare, Users, Award } from 'lucide-react';
 
 const Reviews = () => {
-  const [stats, setStats] = useState({
-    totalReviews: 0,
-    averageRating: 0,
-    satisfiedClients: 0,
-    responseRate: 0
-  });
-
-  useEffect(() => {
-    // Charger les statistiques des avis
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
-    // Ici vous pouvez charger les vraies statistiques depuis votre API
-    setStats({
-      totalReviews: 247,
-      averageRating: 4.8,
-      satisfiedClients: 98,
-      responseRate: 100
-    });
-  };
+  const serviceReviewsRef = useRef<{ openReviewForm: () => void }>(null);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
       <main className="container mx-auto px-4 py-8 md:py-12">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-6">
-            Avis Clients
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Découvrez ce que nos clients pensent de nos services et partagez votre expérience avec NovRH.
-          </p>
-          
-          {/* Statistiques globales */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 max-w-4xl mx-auto mb-12">
-            <Card className="text-center p-4 md:p-6">
-              <div className="flex justify-center mb-2">
-                <Star className="w-6 h-6 text-yellow-500" />
-              </div>
-              <div className="text-2xl md:text-3xl font-bold text-primary mb-1">
-                {stats.averageRating}
-              </div>
-              <div className="text-sm text-muted-foreground">Note moyenne</div>
-            </Card>
-            
-            <Card className="text-center p-4 md:p-6">
-              <div className="flex justify-center mb-2">
-                <MessageSquare className="w-6 h-6 text-blue-500" />
-              </div>
-              <div className="text-2xl md:text-3xl font-bold text-primary mb-1">
-                {stats.totalReviews}
-              </div>
-              <div className="text-sm text-muted-foreground">Avis clients</div>
-            </Card>
-            
-            <Card className="text-center p-4 md:p-6">
-              <div className="flex justify-center mb-2">
-                <Users className="w-6 h-6 text-green-500" />
-              </div>
-              <div className="text-2xl md:text-3xl font-bold text-primary mb-1">
-                {stats.satisfiedClients}%
-              </div>
-              <div className="text-sm text-muted-foreground">Clients satisfaits</div>
-            </Card>
-            
-            <Card className="text-center p-4 md:p-6">
-              <div className="flex justify-center mb-2">
-                <ThumbsUp className="w-6 h-6 text-purple-500" />
-              </div>
-              <div className="text-2xl md:text-3xl font-bold text-primary mb-1">
-                {stats.responseRate}%
-              </div>
-              <div className="text-sm text-muted-foreground">Taux de réponse</div>
-            </Card>
-          </div>
-        </div>
-
         {/* Système d'avis */}
-        <ServiceReviews />
+        <ServiceReviews ref={serviceReviewsRef} />
 
         {/* Témoignages clients */}
         <div className="mt-16">
@@ -253,7 +180,14 @@ const Reviews = () => {
               <p className="text-lg mb-6 opacity-90">
                 Votre avis compte ! Aidez d'autres entreprises à découvrir nos services.
               </p>
-              <Button size="lg" variant="secondary" className="px-8">
+              <Button 
+                size="lg" 
+                variant="secondary" 
+                className="px-8"
+                onClick={() => {
+                  serviceReviewsRef.current?.openReviewForm();
+                }}
+              >
                 <MessageSquare className="w-5 h-5 mr-2" />
                 Laisser un avis
               </Button>

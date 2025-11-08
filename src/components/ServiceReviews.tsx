@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,13 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { emailService } from '@/services/emailService';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Star, 
   MessageSquare, 
   ThumbsUp, 
   ThumbsDown, 
   Send, 
-  Plus,
   Filter,
   StarIcon,
   User,
@@ -23,7 +23,8 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  Clock
 } from 'lucide-react';
 
 interface ServiceReview {
@@ -70,7 +71,11 @@ interface RatingStats {
   rating_5_count: number;
 }
 
-const ServiceReviews = () => {
+interface ServiceReviewsRef {
+  openReviewForm: () => void;
+}
+
+const ServiceReviews = forwardRef<ServiceReviewsRef>((props, ref) => {
   const [reviews, setReviews] = useState<ServiceReview[]>([]);
   const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,7 +103,27 @@ const ServiceReviews = () => {
 
   useEffect(() => {
     loadData();
+
+    // Écouter les changements d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  // Exposer la fonction pour ouvrir le formulaire depuis l'extérieur
+  useImperativeHandle(ref, () => ({
+    openReviewForm: () => {
+      setShowReviewForm(true);
+    }
+  }));
 
   const loadData = async () => {
     try {
@@ -108,25 +133,68 @@ const ServiceReviews = () => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       setUser(currentUser);
 
-      // Charger les statistiques globales
+      // Charger les statistiques globales (gérer l'erreur si la fonction n'existe pas)
       const { data: statsData, error: statsError } = await supabase
         .rpc('get_service_rating_stats', { service_type_param: 'general' });
 
-      if (statsError) throw statsError;
-      setRatingStats(statsData?.[0] || null);
+      if (statsError) {
+        console.warn('Erreur lors du chargement des statistiques:', statsError);
+        // Ne pas faire échouer le chargement si les stats ne sont pas disponibles
+        setRatingStats(null);
+      } else {
+        setRatingStats(statsData?.[0] || null);
+      }
 
-      // Charger les avis récents
+      // Charger les avis récents avec une requête directe
       const { data: reviewsData, error: reviewsError } = await supabase
-        .rpc('get_recent_reviews', { limit_count: 50 });
+        .from('service_reviews')
+        .select('id, user_id, service_type, rating, title, comment, is_anonymous, is_verified, is_approved, created_at')
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (reviewsError) throw reviewsError;
-      setReviews(reviewsData || []);
+      
+      // Récupérer les noms d'utilisateurs pour chaque avis
+      // Après migration, user_id pointe vers auth.users.id, donc on utilise user_id dans profiles
+      const userIds = [...new Set((reviewsData || []).map((r: any) => r.user_id))];
+      let profilesMap = new Map();
+      
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, first_name, last_name, email')
+          .in('user_id', userIds);
+        
+        profilesMap = new Map((profilesData || []).map((p: any) => [p.user_id, p]));
+      }
+      
+      // Formater les données pour correspondre à l'interface
+      const formattedReviews = (reviewsData || []).map((review: any) => {
+        const profile = profilesMap.get(review.user_id);
+        return {
+          ...review,
+          user_name: review.is_anonymous 
+            ? 'Utilisateur anonyme' 
+            : profile 
+              ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email
+              : 'Utilisateur'
+        };
+      });
+      
+      setReviews(formattedReviews);
 
     } catch (error: any) {
       console.error('Erreur lors du chargement:', error);
+      console.error('Détails de l\'erreur:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       toast({
         title: "Erreur",
-        description: "Impossible de charger les avis",
+        description: error.message || "Impossible de charger les avis",
         variant: "destructive",
       });
     } finally {
@@ -136,7 +204,11 @@ const ServiceReviews = () => {
 
   const submitReview = async () => {
     try {
-      if (!user) {
+      // Vérifier à nouveau l'utilisateur au moment de la soumission
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !currentUser) {
+        console.error('Erreur lors de la vérification de l\'utilisateur:', userError);
         toast({
           title: "Erreur",
           description: "Vous devez être connecté pour laisser un avis",
@@ -145,26 +217,47 @@ const ServiceReviews = () => {
         return;
       }
 
-      const { error } = await supabase
+      // Après la migration, on utilise directement auth.uid() (currentUser.id)
+      // Le profil est créé automatiquement via le trigger handle_new_user()
+      // Plus besoin de récupérer profiles.id, on utilise directement auth.users.id
+      
+      console.log('Tentative d\'insertion de l\'avis avec user_id (auth.uid):', currentUser.id);
+      const { data: insertedReview, error } = await supabase
         .from('service_reviews')
         .insert([
           {
-            user_id: user.id,
+            user_id: currentUser.id, // Utiliser directement auth.users.id après migration
             service_type: reviewForm.service_type,
             rating: reviewForm.rating,
             title: reviewForm.title,
             comment: reviewForm.comment,
             is_anonymous: reviewForm.is_anonymous,
-            is_approved: false // Nécessite approbation admin
+            is_approved: true // Publication directe sans approbation admin
           }
-        ]);
+        ])
+        .select('id')
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur détaillée lors de l\'insertion de l\'avis:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+
+      if (!insertedReview) {
+        throw new Error('Avis inséré mais aucune donnée retournée');
+      }
+
+      console.log('Avis inséré avec succès:', insertedReview.id);
 
       // Envoyer une notification email à l'admin
       try {
         await emailService.sendReviewNotification({
-          userName: user.user_metadata?.full_name || 'Utilisateur',
+          userName: currentUser.user_metadata?.full_name || 'Utilisateur',
           serviceType: reviewForm.service_type,
           rating: reviewForm.rating,
           title: reviewForm.title,
@@ -177,8 +270,8 @@ const ServiceReviews = () => {
       }
 
       toast({
-        title: "Avis soumis",
-        description: "Votre avis a été soumis et sera publié après validation",
+        title: "Avis publié",
+        description: "Votre avis a été publié avec succès. Merci pour votre retour !",
       });
 
       setShowReviewForm(false);
@@ -190,6 +283,7 @@ const ServiceReviews = () => {
         is_anonymous: false
       });
 
+      // Recharger les avis pour afficher le nouvel avis immédiatement
       await loadData();
     } catch (error: any) {
       console.error('Erreur lors de la soumission:', error);
@@ -203,14 +297,21 @@ const ServiceReviews = () => {
 
   const addReaction = async (reviewId: string, reactionType: string) => {
     try {
-      if (!user) return;
+      // Vérifier l'utilisateur au moment de l'ajout de réaction
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !currentUser) {
+        console.error('Erreur lors de la vérification de l\'utilisateur:', userError);
+        return;
+      }
 
+      // Après la migration, on utilise directement auth.uid() (currentUser.id)
       const { error } = await supabase
         .from('review_reactions')
         .upsert([
           {
             review_id: reviewId,
-            user_id: user.id,
+            user_id: currentUser.id, // Utiliser directement auth.users.id après migration
             reaction_type: reactionType
           }
         ], {
@@ -333,18 +434,6 @@ const ServiceReviews = () => {
           </CardContent>
         </Card>
       )}
-
-      {/* Bouton pour laisser un avis */}
-      <div className="text-center">
-        <Button 
-          onClick={() => setShowReviewForm(true)}
-          size="lg"
-          className="px-8"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Laisser un avis
-        </Button>
-      </div>
 
       {/* Filtres */}
       <Card>
@@ -541,6 +630,8 @@ const ServiceReviews = () => {
       )}
     </div>
   );
-};
+});
+
+ServiceReviews.displayName = 'ServiceReviews';
 
 export default ServiceReviews;
