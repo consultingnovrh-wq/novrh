@@ -5,6 +5,7 @@ const SUPABASE_URL = "https://dsxkfzqqgghwqiihierm.supabase.co";
 const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzeGtmenFxZ2dod3FpaWhpZXJtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODkwNzAyMSwiZXhwIjoyMDc0NDgzMDIxfQ.uPw8Jjnaj6QI25wlwQt9C0wPHj90W0nPcUNOvthC-RY";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD_TO_TEST || process.env.ADMIN_INITIAL_PASSWORD || "").trim();
 
 async function applyAuthFix() {
   try {
@@ -88,22 +89,26 @@ async function applyAuthFix() {
     }
     
     // 6. Test de connexion
-    console.log('\n🧪 Test de connexion...');
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: 'admin@novrh.com',
-      password: 'admin123456'
-    });
-
-    if (authError) {
-      console.error('❌ Erreur de connexion:', authError.message);
-      console.log('\n🔧 La correction n\'a pas résolu le problème.');
-      console.log('💡 Essayez de redémarrer le serveur de développement.');
+    if (!ADMIN_PASSWORD) {
+      console.warn('\n⚠️ ADMIN_PASSWORD_TO_TEST non défini. Test de connexion ignoré.');
     } else {
-      console.log('✅ Connexion réussie!');
-      console.log(`   Utilisateur: ${authData.user.email}`);
-      console.log(`   ID: ${authData.user.id}`);
-      console.log('\n🎉 CORRECTION APPLIQUÉE AVEC SUCCÈS !');
-      console.log('🌐 Vous pouvez maintenant accéder à: http://localhost:8081/admin');
+      console.log('\n🧪 Test de connexion...');
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: 'admin@novrh.com',
+        password: ADMIN_PASSWORD
+      });
+
+      if (authError) {
+        console.error('❌ Erreur de connexion:', authError.message);
+        console.log('\n🔧 La correction n\'a pas résolu le problème.');
+        console.log('💡 Essayez de redémarrer le serveur de développement.');
+      } else {
+        console.log('✅ Connexion réussie!');
+        console.log(`   Utilisateur: ${authData.user.email}`);
+        console.log(`   ID: ${authData.user.id}`);
+        console.log('\n🎉 CORRECTION APPLIQUÉE AVEC SUCCÈS !');
+        console.log('🌐 Vous pouvez maintenant accéder à: http://localhost:8081/admin');
+      }
     }
     
   } catch (error) {

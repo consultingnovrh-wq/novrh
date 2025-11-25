@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useDynamicActions } from "@/hooks/use-dynamic-actions";
 import { Users, Building, FileText, Search, BookOpen, BarChart } from "lucide-react";
+import companyLogo from "@/assets/logo.png";
 
 const PlatformSection = () => {
   const { handleViewJobs, handleAddCV, handlePostJob, handleViewCVTheque, handleViewServices, isAuthenticated, userType } = useDynamicActions();
@@ -43,12 +44,12 @@ const PlatformSection = () => {
   ];
 
   const partners = [
-    { name: "TechSolutions Mali", logo: "/placeholder.svg" },
-    { name: "AgroFinance Sénégal", logo: "/placeholder.svg" },
-    { name: "GreenEnergy Côte d'Ivoire", logo: "/placeholder.svg" },
-    { name: "HealthCare Burkina", logo: "/placeholder.svg" },
-    { name: "EduTech Ghana", logo: "/placeholder.svg" },
-    { name: "Logistics Niger", logo: "/placeholder.svg" }
+    { name: "TechSolutions Mali", logo: companyLogo, website: "https://techsolutions.ml" },
+    { name: "AgroFinance Sénégal", logo: "", website: "https://agrofinance.sn" },
+    { name: "GreenEnergy Côte d'Ivoire", logo: "", website: "https://greenenergy.ci" },
+    { name: "HealthCare Burkina", logo: "", website: "https://healthcare.bf" },
+    { name: "EduTech Ghana", logo: "", website: "https://edutech.gh" },
+    { name: "Logistics Niger", logo: "", website: "https://logistics.ne" }
   ];
 
   return (
@@ -167,11 +168,29 @@ const PlatformSection = () => {
           <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto">
             Ils nous ont fait confiance et contribuent à notre écosystème d'innovation
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {partners.map((partner, index) => (
-              <div key={index} className="flex items-center justify-center p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <img src={partner.logo} alt={partner.name} className="h-12 w-auto opacity-60 hover:opacity-100 transition-opacity" />
-              </div>
+              <a
+                key={index}
+                href={partner.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
+                aria-label={`Visiter le site de ${partner.name}`}
+              >
+                {partner.logo ? (
+                  <img
+                    src={partner.logo}
+                    alt={partner.name}
+                    className="h-12 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                  />
+                ) : (
+                  <span className="text-sm font-semibold text-primary text-center">
+                    {partner.name}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground mt-2">Voir le site</span>
+              </a>
             ))}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -53,11 +53,56 @@ const RecruiterSubscriptionPlans = () => {
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [selectionHistory, setSelectionHistory] = useState<{ planId: string; planName: string; timestamp: string }[]>([]);
   const { toast } = useToast();
+  const HISTORY_STORAGE_KEY = 'novrh-plan-history';
 
   useEffect(() => {
     loadData();
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+        if (stored) {
+          setSelectionHistory(JSON.parse(stored));
+        }
+      } catch (error) {
+        console.warn('Impossible de charger l\'historique des plans:', error);
+      }
+    }
   }, []);
+
+  const persistSelectionHistory = (entry: { planId: string; planName: string; timestamp: string }) => {
+    setSelectionHistory((prev) => {
+      const updated = [entry, ...prev.filter((item) => item.planId !== entry.planId)].slice(0, 5);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
+      }
+      return updated;
+    });
+  };
+
+  const recordPlanIntent = async (planId: string, planName: string, userId?: string) => {
+    const entry = {
+      planId,
+      planName,
+      timestamp: new Date().toISOString()
+    };
+    persistSelectionHistory(entry);
+
+    try {
+      await supabase.from('recruiter_subscription_events').insert({
+        plan_id: planId,
+        plan_name: planName,
+        user_id: userId || null,
+        event_type: 'selected',
+        metadata: {
+          source: 'recruiter_subscription_page'
+        }
+      });
+    } catch (error) {
+      console.warn('Impossible d\'enregistrer l\'interaction plan:', error);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -113,8 +158,9 @@ const RecruiterSubscriptionPlans = () => {
       }
 
       setPlans(plansData || []);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur lors du chargement:', error);
+      const message = error instanceof Error ? error.message : "Erreur inconnue";
       toast({
         title: "Erreur",
         description: "Impossible de charger les informations d'abonnement",
@@ -130,20 +176,23 @@ const RecruiterSubscriptionPlans = () => {
       setSubscribing(planId);
       
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Erreur",
-          description: "Vous devez être connecté pour vous abonner",
-          variant: "destructive",
-        });
-        return;
-      }
 
       const plan = plans.find(p => p.id === planId);
       if (!plan) {
         toast({
           title: "Erreur",
           description: "Plan d'abonnement introuvable",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await recordPlanIntent(planId, plan.name, user?.id);
+
+      if (!user) {
+        toast({
+          title: "Connexion requise",
+          description: "Créez un compte recruteur pour finaliser votre abonnement.",
           variant: "destructive",
         });
         return;
@@ -197,11 +246,12 @@ const RecruiterSubscriptionPlans = () => {
 
       // Recharger les données
       await loadData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur lors de l\'abonnement:', error);
+      const message = error instanceof Error ? error.message : "Erreur inconnue";
       toast({
         title: "Erreur",
-        description: "Impossible de créer l'abonnement",
+        description: message || "Impossible de créer l'abonnement",
         variant: "destructive",
       });
     } finally {
@@ -247,6 +297,27 @@ const RecruiterSubscriptionPlans = () => {
           Choisissez le plan qui correspond à vos besoins de recrutement et accédez aux CV des candidats
         </p>
       </div>
+
+      {selectionHistory.length > 0 && (
+        <Card className="border-blue-100 bg-blue-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-blue-900">Historique récent des plans consultés</CardTitle>
+            <CardDescription>Ces interactions sont enregistrées localement pour faciliter vos comparaisons.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {selectionHistory.map((entry) => (
+              <div key={`${entry.planId}-${entry.timestamp}`} className="flex items-center justify-between text-sm">
+                <span className="font-medium text-blue-900">
+                  {plans.find((p) => p.id === entry.planId)?.name || entry.planName}
+                </span>
+                <span className="text-blue-800/80">
+                  {new Date(entry.timestamp).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                </span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Abonnement actuel */}
       {userSubscription && (

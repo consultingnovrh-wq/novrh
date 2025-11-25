@@ -25,6 +25,7 @@ import {
   Save,
   FileUp
 } from "lucide-react";
+import { CV_BUCKET } from "@/constants/storage";
 
 interface CVData {
   personalInfo: {
@@ -85,12 +86,20 @@ const AddCV = () => {
   const [newSkill, setNewSkill] = useState("");
   const [existingCV, setExistingCV] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("upload");
+  const [hasAutoEnabledEditing, setHasAutoEnabledEditing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     loadExistingCV();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "create" && !hasAutoEnabledEditing) {
+      setEditing(true);
+      setHasAutoEnabledEditing(true);
+    }
+  }, [activeTab, hasAutoEnabledEditing]);
 
   const loadExistingCV = async () => {
     try {
@@ -278,10 +287,13 @@ const AddCV = () => {
       // Créer un fichier CV structuré (JSON pour l'instant)
       const cvContent = JSON.stringify(cvData, null, 2);
       const fileName = `cv_${user.id}_${Date.now()}.json`;
+      const filePath = `${user.id}/${fileName}`;
       
       const { error: uploadError } = await supabase.storage
-        .from('cvs')
-        .upload(fileName, new Blob([cvContent], { type: 'application/json' }));
+        .from(CV_BUCKET)
+        .upload(filePath, new Blob([cvContent], { type: 'application/json' }), {
+          upsert: true
+        });
 
       if (uploadError) {
         throw uploadError;
@@ -290,7 +302,7 @@ const AddCV = () => {
       // Mettre à jour l'URL du CV dans la base de données
       const { error: updateError } = await supabase
         .from('candidates')
-        .update({ cv_url: fileName })
+        .update({ cv_url: filePath })
         .eq('user_id', user.id);
 
       if (updateError) {
@@ -302,12 +314,14 @@ const AddCV = () => {
         description: "Votre CV a été sauvegardé avec succès.",
       });
 
+      setExistingCV(filePath);
       setEditing(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
+      const message = error instanceof Error ? error.message : 'Erreur lors de la sauvegarde du CV';
       toast({
         title: "Erreur",
-        description: error.message || "Erreur lors de la sauvegarde du CV",
+        description: message,
         variant: "destructive"
       });
     } finally {
@@ -358,8 +372,10 @@ const AddCV = () => {
               <TabsContent value="upload" className="space-y-6">
                 <CVUpload
                   existingCV={existingCV}
-                  onUploadSuccess={(fileUrl, fileName) => {
-                    setExistingCV(fileName);
+                  onUploadSuccess={(_, storagePath) => {
+                    if (storagePath) {
+                      setExistingCV(storagePath);
+                    }
                     toast({
                       title: "CV mis à jour !",
                       description: "Votre CV a été sauvegardé avec succès.",
@@ -653,7 +669,12 @@ const AddCV = () => {
                       value={newSkill}
                       onChange={(e) => setNewSkill(e.target.value)}
                       placeholder="Ajouter une compétence"
-                      onKeyPress={(e) => e.key === 'Enter' && addSkill()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addSkill();
+                        }
+                      }}
                     />
                     <Button onClick={addSkill} size="sm">
                       <Plus className="h-4 w-4" />

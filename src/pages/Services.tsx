@@ -14,8 +14,25 @@ import {
   BookOpen,
   CheckCircle
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Services = () => {
+  const navigate = useNavigate();
+
+  const handleQuoteNavigation = (context?: string) => {
+    const params = new URLSearchParams();
+    if (context) {
+      params.set("context", context);
+    }
+    navigate(`/quote-request${params.toString() ? `?${params.toString()}` : ""}`);
+  };
+
+  const handleLearnMore = (serviceTitle: string) => {
+    const params = new URLSearchParams();
+    params.set("service", serviceTitle);
+    navigate(`/contact?${params.toString()}`);
+  };
+
   const services = [
     {
       icon: <FileCheck className="w-8 h-8" />,
@@ -99,7 +116,11 @@ const Services = () => {
               <p className="text-xl text-muted-foreground mb-8">
                 Solutions complètes pour optimiser votre gestion des ressources humaines
               </p>
-              <Button size="lg" className="bg-primary hover:bg-primary/90">
+              <Button
+                size="lg"
+                className="bg-primary hover:bg-primary/90"
+                onClick={() => handleQuoteNavigation("services-hero")}
+              >
                 Demander un Devis Gratuit
               </Button>
             </div>
@@ -132,7 +153,7 @@ const Services = () => {
                         <Badge variant="outline" className="text-primary border-primary">
                           {service.pricing}
                         </Badge>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => handleLearnMore(service.title)}>
                           En savoir plus
                         </Button>
                       </div>
@@ -175,11 +196,16 @@ const Services = () => {
                 Contactez nos experts pour une consultation gratuite et personnalisée
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" variant="secondary">
+                <Button size="lg" variant="secondary" onClick={() => handleQuoteNavigation("consultation")}>
                   <Briefcase className="w-5 h-5 mr-2" />
                   Consultation Gratuite
                 </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-primary">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/70 text-white hover:bg-white/10 hover:text-white transition-colors"
+                  onClick={() => window.open("/TARIFICATION.docx", "_blank")}
+                >
                   <BookOpen className="w-5 h-5 mr-2" />
                   Télécharger Brochure
                 </Button>

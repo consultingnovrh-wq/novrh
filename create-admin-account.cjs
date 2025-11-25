@@ -12,6 +12,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   }
 });
 
+const generateSecurePassword = () => {
+  const randomPart = Math.random().toString(36).slice(-8);
+  return `NovRH-${Date.now().toString(36)}-${randomPart}!`;
+};
+
+const ADMIN_PASSWORD = (process.env.ADMIN_INITIAL_PASSWORD || "").trim() || generateSecurePassword();
+
 async function createAdminAccount() {
   try {
     console.log('🚀 Création du compte administrateur...');
@@ -19,7 +26,7 @@ async function createAdminAccount() {
     // 1. Créer l'utilisateur via l'inscription normale
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: 'admin@novrh.ml',
-      password: 'Admin123!',
+      password: ADMIN_PASSWORD,
       options: {
         data: {
           first_name: 'Admin',
@@ -84,7 +91,7 @@ async function createAdminAccount() {
 
     console.log('\n🎉 COMPTE ADMINISTRATEUR CRÉÉ AVEC SUCCÈS !');
     console.log('📧 Email:', 'admin@novrh.ml');
-    console.log('🔑 Mot de passe:', 'Admin123!');
+    console.log('🔑 Mot de passe:', ADMIN_PASSWORD);
     console.log('🆔 ID utilisateur:', authData.user.id);
     console.log('👑 Rôle: Administrateur');
     console.log('\n🌐 Accès au dashboard: http://localhost:5173/admin');

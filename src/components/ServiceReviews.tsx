@@ -77,7 +77,15 @@ interface ServiceReviewsRef {
 
 const ServiceReviews = forwardRef<ServiceReviewsRef>((props, ref) => {
   const [reviews, setReviews] = useState<ServiceReview[]>([]);
-  const [ratingStats, setRatingStats] = useState<RatingStats | null>(null);
+  const [ratingStats, setRatingStats] = useState<RatingStats>({
+    total_reviews: 0,
+    average_rating: 0,
+    rating_1_count: 0,
+    rating_2_count: 0,
+    rating_3_count: 0,
+    rating_4_count: 0,
+    rating_5_count: 0
+  });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [serviceFilter, setServiceFilter] = useState('all');
@@ -133,16 +141,49 @@ const ServiceReviews = forwardRef<ServiceReviewsRef>((props, ref) => {
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       setUser(currentUser);
 
-      // Charger les statistiques globales (gérer l'erreur si la fonction n'existe pas)
-      const { data: statsData, error: statsError } = await supabase
-        .rpc('get_service_rating_stats', { service_type_param: 'general' });
+      // Charger les statistiques globales (tous les services)
+      // Calculer directement depuis la table pour avoir les stats globales
+      const { data: reviewsForStats, error: statsError } = await supabase
+        .from('service_reviews')
+        .select('rating')
+        .eq('is_approved', true);
 
       if (statsError) {
         console.warn('Erreur lors du chargement des statistiques:', statsError);
-        // Ne pas faire échouer le chargement si les stats ne sont pas disponibles
-        setRatingStats(null);
+        // Initialiser avec des valeurs par défaut
+        setRatingStats({
+          total_reviews: 0,
+          average_rating: 0,
+          rating_1_count: 0,
+          rating_2_count: 0,
+          rating_3_count: 0,
+          rating_4_count: 0,
+          rating_5_count: 0
+        });
       } else {
-        setRatingStats(statsData?.[0] || null);
+        // Calculer les statistiques manuellement
+        const reviews = reviewsForStats || [];
+        const total = reviews.length;
+        const average = total > 0 
+          ? reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / total 
+          : 0;
+        const ratingCounts = {
+          1: reviews.filter(r => r.rating === 1).length,
+          2: reviews.filter(r => r.rating === 2).length,
+          3: reviews.filter(r => r.rating === 3).length,
+          4: reviews.filter(r => r.rating === 4).length,
+          5: reviews.filter(r => r.rating === 5).length,
+        };
+
+        setRatingStats({
+          total_reviews: total,
+          average_rating: Math.round(average * 100) / 100, // Arrondir à 2 décimales
+          rating_1_count: ratingCounts[1],
+          rating_2_count: ratingCounts[2],
+          rating_3_count: ratingCounts[3],
+          rating_4_count: ratingCounts[4],
+          rating_5_count: ratingCounts[5]
+        });
       }
 
       // Charger les avis récents avec une requête directe
@@ -392,9 +433,8 @@ const ServiceReviews = forwardRef<ServiceReviewsRef>((props, ref) => {
         </p>
       </div>
 
-      {/* Statistiques globales */}
-      {ratingStats && (
-        <Card>
+      {/* Statistiques globales - Toujours afficher, même si 0 */}
+      <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="w-5 h-5" />
@@ -433,7 +473,6 @@ const ServiceReviews = forwardRef<ServiceReviewsRef>((props, ref) => {
             </div>
           </CardContent>
         </Card>
-      )}
 
       {/* Filtres */}
       <Card>

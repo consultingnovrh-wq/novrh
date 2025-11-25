@@ -48,28 +48,68 @@ const AdminInviteModal = ({ isOpen, onClose, onSuccess }: AdminInviteModalProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.role) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un rôle.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Récupérer l'ID du rôle depuis admin_roles
+      const { data: roleData, error: roleError } = await supabase
+        .from('admin_roles')
+        .select('id')
+        .eq('name', formData.role)
+        .single();
+
+      if (roleError || !roleData) {
+        console.error('Error fetching role:', roleError);
+        // Si la table admin_roles n'existe pas, on continue avec le nom du rôle
+      }
+
       // Vérifier si l'utilisateur existe déjà
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: userCheckError } = await supabase
         .from('profiles')
         .select('user_id, email')
         .eq('email', formData.email)
-        .single();
+        .maybeSingle();
+
+      if (userCheckError && userCheckError.code !== 'PGRST116') {
+        throw userCheckError;
+      }
 
       if (existingUser) {
         // L'utilisateur existe, l'ajouter comme admin
-        const { error: adminError } = await supabase
-          .from('administrators')
-          .insert({
-            user_id: existingUser.user_id,
-            role_id: formData.role,
-            is_active: true
-          });
+        // D'abord, mettre à jour le profil pour être admin
+        const { error: profileUpdateError } = await supabase
+          .from('profiles')
+          .update({ user_type: 'admin' })
+          .eq('user_id', existingUser.user_id);
 
-        if (adminError) {
-          throw adminError;
+        if (profileUpdateError) {
+          console.error('Error updating profile:', profileUpdateError);
+        }
+
+        // Ensuite, ajouter dans administrators si la table existe
+        if (roleData) {
+          const { error: adminError } = await supabase
+            .from('administrators')
+            .insert({
+              user_id: existingUser.user_id,
+              role_id: roleData.id,
+              is_active: true
+            });
+
+          if (adminError) {
+            // Si la table n'existe pas, on continue quand même
+            console.log('Table administrators might not exist:', adminError.message);
+          }
         }
 
         toast({
@@ -78,18 +118,26 @@ const AdminInviteModal = ({ isOpen, onClose, onSuccess }: AdminInviteModalProps)
         });
       } else {
         // L'utilisateur n'existe pas, créer une invitation
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        
         const { error: inviteError } = await supabase
           .from('admin_invitations')
           .insert({
             email: formData.email,
             first_name: formData.firstName,
             last_name: formData.lastName,
-            role_id: formData.role,
-            message: formData.message,
-            status: 'pending'
+            role_id: formData.role, // On stocke le nom du rôle pour l'instant
+            message: formData.message || null,
+            status: 'pending',
+            invited_by: currentUser?.id || null,
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Expire dans 7 jours
           });
 
         if (inviteError) {
+          // Si la table n'existe pas, on affiche un message d'erreur plus clair
+          if (inviteError.code === '42P01' || inviteError.message.includes('does not exist')) {
+            throw new Error('La table admin_invitations n\'existe pas. Veuillez exécuter la migration SQL correspondante.');
+          }
           throw inviteError;
         }
 
@@ -111,11 +159,11 @@ const AdminInviteModal = ({ isOpen, onClose, onSuccess }: AdminInviteModalProps)
       onClose();
       onSuccess?.();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating admin invitation:', error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la création de l'invitation.",
+        description: error.message || "Une erreur est survenue lors de la création de l'invitation. Veuillez vérifier que la table admin_invitations existe dans la base de données.",
         variant: "destructive"
       });
     } finally {

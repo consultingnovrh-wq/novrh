@@ -5,6 +5,7 @@ const SUPABASE_URL = "https://dsxkfzqqgghwqiihierm.supabase.co";
 const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzeGtmenFxZ2dod3FpaWhpZXJtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODkwNzAyMSwiZXhwIjoyMDc0NDgzMDIxfQ.uPw8Jjnaj6QI25wlwQt9C0wPHj90W0nPcUNOvthC-RY";
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD_TO_TEST || process.env.ADMIN_INITIAL_PASSWORD || "").trim();
 
 async function fixAdminProfile() {
   try {
@@ -55,36 +56,44 @@ async function fixAdminProfile() {
     }
     
     // 3. Test de connexion
-    console.log('\n🧪 Test de connexion...');
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: 'admin@novrh.com',
-      password: 'admin123456'
-    });
-
-    if (authError) {
-      console.error('❌ Erreur de connexion:', authError);
+    if (!ADMIN_PASSWORD) {
+      console.warn('\n⚠️ Mot de passe admin non défini (ADMIN_PASSWORD_TO_TEST). Test de connexion ignoré.');
     } else {
-      console.log('✅ Connexion réussie!');
-      console.log(`   Utilisateur: ${authData.user.email}`);
-      console.log(`   ID: ${authData.user.id}`);
-      
-      // Vérifier le profil après connexion
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_type, is_active')
-        .eq('user_id', authData.user.id)
-        .single();
-        
-      if (profileError) {
-        console.error('❌ Erreur lors de la récupération du profil:', profileError);
+      console.log('\n🧪 Test de connexion...');
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: 'admin@novrh.com',
+        password: ADMIN_PASSWORD
+      });
+
+      if (authError) {
+        console.error('❌ Erreur de connexion:', authError);
       } else {
-        console.log(`   Profil: ${profile.user_type} (actif: ${profile.is_active})`);
+        console.log('✅ Connexion réussie!');
+        console.log(`   Utilisateur: ${authData.user.email}`);
+        console.log(`   ID: ${authData.user.id}`);
+        
+        // Vérifier le profil après connexion
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('user_type, is_active')
+          .eq('user_id', authData.user.id)
+          .single();
+          
+        if (profileError) {
+          console.error('❌ Erreur lors de la récupération du profil:', profileError);
+        } else {
+          console.log(`   Profil: ${profile.user_type} (actif: ${profile.is_active})`);
+        }
       }
     }
     
     console.log('\n🎉 CORRECTION TERMINÉE !');
     console.log('📧 Email: admin@novrh.com');
-    console.log('🔑 Mot de passe: admin123456');
+    if (ADMIN_PASSWORD) {
+      console.log('🔑 Mot de passe vérifié via variable d\'environnement');
+    } else {
+      console.log('🔑 Mot de passe non fourni (voir ADMIN_PASSWORD_TO_TEST)');
+    }
     console.log('🌐 Accès: http://localhost:8081/admin');
     
   } catch (error) {

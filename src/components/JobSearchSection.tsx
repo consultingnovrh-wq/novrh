@@ -6,12 +6,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, MapPin, Briefcase, Clock, Users, TrendingUp } from "lucide-react";
 import { useRealStats } from "@/hooks/use-real-stats";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const JobSearchSection = () => {
   const [searchKeywords, setSearchKeywords] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const { stats, loading: statsLoading, formatNumber } = useRealStats();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const jobCategories = [
     "Toutes spécialités",
@@ -64,6 +69,63 @@ const JobSearchSection = () => {
       posted: "il y a 3 jours"
     }
   ];
+
+  const quickFilters = [
+    { label: "CDI", value: "CDI" },
+    { label: "Mission", value: "Mission" },
+    { label: "Management", value: "Management" },
+    { label: "Formation", value: "Formation" },
+    { label: "Conseil", value: "Conseil" }
+  ];
+
+  const filteredJobs = activeFilters.length
+    ? featuredJobs.filter((job) =>
+        activeFilters.some(
+          (filter) => job.type === filter || job.tags.includes(filter)
+        )
+      )
+    : featuredJobs;
+
+  const toggleFilter = (value: string) => {
+    setActiveFilters((prev) =>
+      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+    );
+  };
+
+  const buildQueryString = (mode: "basic" | "advanced") => {
+    const params = new URLSearchParams();
+    if (searchKeywords) params.set("keywords", searchKeywords);
+    if (selectedCategory) params.set("category", selectedCategory);
+    if (selectedLocation) params.set("location", selectedLocation);
+    if (activeFilters.length) params.set("filters", activeFilters.join(","));
+    if (mode === "advanced") params.set("advanced", "true");
+    return params.toString();
+  };
+
+  const handleSearch = (mode: "basic" | "advanced") => {
+    const hasCriteria = searchKeywords || selectedCategory || selectedLocation || activeFilters.length;
+    if (!hasCriteria) {
+      toast({
+        title: "Ajoutez un critère",
+        description: "Sélectionnez un mot-clé, une spécialité ou un filtre pour lancer la recherche.",
+      });
+      return;
+    }
+
+    const query = buildQueryString(mode);
+    const anchor = mode === "advanced" ? "#filtres-avances" : "#results";
+    navigate(`/jobs${query ? `?${query}` : ""}${anchor}`);
+  };
+
+  const handleViewOffer = (title: string) => {
+    const params = new URLSearchParams();
+    params.set("highlight", title);
+    navigate(`/jobs?${params.toString()}#results`);
+  };
+
+  const handleViewAllOffers = () => {
+    navigate("/jobs#results");
+  };
 
   const statsData = [
     { icon: <Briefcase className="w-6 h-6" />, value: formatNumber(stats.totalJobs), label: "Offres d'emploi" },
@@ -153,15 +215,41 @@ const JobSearchSection = () => {
               </div>
             </div>
 
-                                  <div className="flex flex-col sm:flex-row gap-4 mt-6">
-                        <Button size="lg" className="bg-[#00167a] hover:bg-[#00167a]/90 flex-1 sm:flex-none">
-                          <Search className="w-4 h-4 mr-2" />
-                          RECHERCHER
-                        </Button>
-                        <Button variant="outline" size="lg" className="border-[#00167a] text-[#00167a] hover:bg-[#00167a] hover:text-white">
-                          Recherche Avancée
-                        </Button>
-                      </div>
+              <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                <Button
+                  size="lg"
+                  className="bg-[#00167a] hover:bg-[#00167a]/90 flex-1 sm:flex-none"
+                  onClick={() => handleSearch("basic")}
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  RECHERCHER
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-[#00167a] text-[#00167a] hover:bg-[#00167a] hover:text-white"
+                  onClick={() => handleSearch("advanced")}
+                >
+                  Recherche Avancée
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {quickFilters.map((filter) => {
+                  const isActive = activeFilters.includes(filter.value);
+                  return (
+                    <Button
+                      key={filter.value}
+                      variant={isActive ? "default" : "outline"}
+                      size="sm"
+                      className={`rounded-full ${isActive ? "bg-[#00167a] text-white" : "text-[#00167a] border-[#00167a]"}`}
+                      onClick={() => toggleFilter(filter.value)}
+                      aria-pressed={isActive}
+                    >
+                      {filter.label}
+                    </Button>
+                  );
+                })}
+              </div>
           </Card>
         </div>
 
@@ -182,7 +270,7 @@ const JobSearchSection = () => {
         <div className="max-w-6xl mx-auto">
           <h3 className="text-xl md:text-2xl font-bold text-center mb-6 md:mb-8 text-primary">Offres à la Une</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {featuredJobs.map((job, index) => (
+            {filteredJobs.map((job, index) => (
               <Card key={index} className="hover:shadow-elegant transition-all duration-300 hover:scale-[1.02]">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between">
@@ -208,7 +296,11 @@ const JobSearchSection = () => {
                       <p className="text-sm font-medium text-foreground">{job.salary}</p>
                     </div>
                     <div className="mt-4 md:mt-0 md:ml-6">
-                      <Button variant="outline" className="w-full md:w-auto">
+                      <Button
+                        variant="outline"
+                        className="w-full md:w-auto"
+                        onClick={() => handleViewOffer(job.title)}
+                      >
                         Voir l'offre
                       </Button>
                     </div>
@@ -219,7 +311,12 @@ const JobSearchSection = () => {
           </div>
 
           <div className="text-center mt-8">
-            <Button variant="outline" size="lg" className="border-[#00167a] text-[#00167a] hover:bg-[#00167a] hover:text-white">
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-[#00167a] text-[#00167a] hover:bg-[#00167a] hover:text-white"
+              onClick={handleViewAllOffers}
+            >
               Voir toutes les offres
             </Button>
           </div>

@@ -6,6 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Users, Eye, Briefcase, Star, Shield, Zap } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
+const faqs = [
+  {
+    question: "Comment fonctionne l'accès aux CV ?",
+    answer: "Votre plan définit un quota de consultations. Chaque fois que vous ouvrez un CV complet, une consultation est décomptée. Vous pouvez visualiser votre consommation en temps réel depuis le tableau de bord recruteur."
+  },
+  {
+    question: "Puis-je changer de plan à tout moment ?",
+    answer: "Oui. Les mises à niveau prennent effet immédiatement et le montant est calculé au prorata. Les rétrogradations sont appliquées à la fin de la période de facturation en cours."
+  },
+  {
+    question: "Y a-t-il un essai gratuit ?",
+    answer: "Nous proposons 7 jours d'essai sans carte bancaire sur le plan Standard. Vous conservez vos candidatures et vos CV sauvegardés même après l'essai."
+  },
+  {
+    question: "Comment annuler mon abonnement ?",
+    answer: "Depuis la section Facturation de votre tableau de bord, cliquez sur “Gérer mon abonnement” puis sur “Mettre fin au renouvellement”. Vous conservez l'accès jusqu'à la date d'expiration."
+  }
+];
 
 const RecruiterSubscription = () => {
   const [user, setUser] = useState<any>(null);
@@ -98,56 +118,21 @@ const RecruiterSubscription = () => {
         {/* FAQ */}
         <div className="mt-16">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-primary mb-8">
-            Questions Fréquentes
+            Questions fréquentes
           </h2>
-          <div className="max-w-4xl mx-auto space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Comment fonctionne l'accès aux CV ?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Avec votre abonnement, vous pouvez consulter les CV des candidats inscrits sur notre plateforme. 
-                  Le nombre de consultations dépend de votre plan d'abonnement.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Puis-je changer de plan à tout moment ?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Oui, vous pouvez mettre à niveau votre plan à tout moment. 
-                  Les frais seront calculés au prorata pour le reste de votre période d'abonnement.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Y a-t-il un essai gratuit ?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Nous offrons un essai gratuit de 7 jours pour tous nos nouveaux utilisateurs. 
-                  Aucune carte de crédit n'est requise pour commencer.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Comment annuler mon abonnement ?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Vous pouvez annuler votre abonnement à tout moment depuis votre tableau de bord. 
-                  Votre accès restera actif jusqu'à la fin de votre période de facturation.
-                </p>
-              </CardContent>
-            </Card>
+          <div className="max-w-4xl mx-auto">
+            <Accordion type="single" collapsible className="rounded-lg border bg-white">
+              {faqs.map((faq, index) => (
+                <AccordionItem key={faq.question} value={`faq-${index}`}>
+                  <AccordionTrigger className="text-left px-6">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="px-6 text-muted-foreground">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </div>
 

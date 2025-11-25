@@ -4,10 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Upload, FileText, X, CheckCircle, AlertCircle, Download } from 'lucide-react';
+import { CV_BUCKET, getCvBucketHint } from '@/constants/storage';
+import { Upload, FileText, X, CheckCircle, Download } from 'lucide-react';
 
 interface CVUploadProps {
-  onUploadSuccess?: (fileUrl: string, fileName: string) => void;
+  onUploadSuccess?: (fileUrl: string, storagePath: string) => void;
   onUploadError?: (error: string) => void;
   existingCV?: string;
   userId?: string;
@@ -90,10 +91,10 @@ const CVUpload: React.FC<CVUploadProps> = ({
 
       // Upload du fichier
       const { data, error } = await supabase.storage
-        .from('cvs')
+        .from(CV_BUCKET)
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true
         });
 
       clearInterval(progressInterval);
@@ -105,8 +106,15 @@ const CVUpload: React.FC<CVUploadProps> = ({
 
       // Obtenir l'URL publique du fichier
       const { data: urlData } = supabase.storage
-        .from('cvs')
+        .from(CV_BUCKET)
         .getPublicUrl(filePath);
+
+      await supabase
+        .from('candidates')
+        .upsert({
+          user_id: user.id,
+          cv_url: filePath
+        });
 
       setUploadedFile(file);
       
@@ -115,16 +123,20 @@ const CVUpload: React.FC<CVUploadProps> = ({
         description: "Votre CV a été sauvegardé.",
       });
 
-      onUploadSuccess?.(urlData.publicUrl, fileName);
+      onUploadSuccess?.(urlData.publicUrl, filePath);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Erreur upload:', error);
+      const message = error instanceof Error ? error.message : 'Une erreur inconnue est survenue.';
+      const isBucketMissing = error instanceof Error && error.message.toLowerCase().includes('bucket');
       toast({
         title: "Erreur d'upload",
-        description: error.message || "Une erreur est survenue lors de l'upload.",
+        description: isBucketMissing
+          ? `Bucket Supabase introuvable (${CV_BUCKET}). ${getCvBucketHint()}`
+          : message || "Une erreur est survenue lors de l'upload.",
         variant: "destructive"
       });
-      onUploadError?.(error.message);
+      onUploadError?.(message);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
@@ -167,7 +179,7 @@ const CVUpload: React.FC<CVUploadProps> = ({
     
     try {
       const { data, error } = await supabase.storage
-        .from('cvs')
+        .from(CV_BUCKET)
         .download(existingCV);
       
       if (error) throw error;

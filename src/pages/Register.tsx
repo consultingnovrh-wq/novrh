@@ -194,9 +194,34 @@ const Register = () => {
       }
 
       if (authData.user) {
-        // Le profil utilisateur sera créé automatiquement par le trigger PostgreSQL
-        // Pas besoin de l'insérer manuellement
-        console.log('✅ Utilisateur créé, profil sera synchronisé automatiquement');
+        // Créer le profil utilisateur directement (sans attendre le trigger)
+        console.log('✅ Utilisateur créé, création du profil...');
+        
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            user_id: authData.user.id,
+            email: candidateData.email,
+            first_name: candidateData.firstName,
+            last_name: candidateData.lastName,
+            user_type: 'candidate',
+            phone: candidateData.phone,
+            is_active: true,
+            email_verified: false
+          }]);
+
+        if (profileError) {
+          // Si l'erreur indique que le profil existe déjà (créé par le trigger), c'est OK
+          if (profileError.message?.includes('duplicate key') || 
+              profileError.code === '23505') {
+            console.log('✅ Profil déjà créé par le trigger');
+          } else {
+            console.error('Erreur création profil:', profileError);
+            throw new Error(`Erreur lors de la création du profil: ${profileError.message}`);
+          }
+        } else {
+          console.log('✅ Profil créé avec succès');
+        }
 
         // Créer le profil candidat
         try {
@@ -212,10 +237,32 @@ const Register = () => {
 
           if (candidateError) {
             console.error('Erreur profil candidat:', candidateError);
-            // Continuer même si le profil candidat échoue
+            // Si l'erreur est liée à RLS, on continue quand même car le compte est créé
+            // Mais on affiche un avertissement
+            if (candidateError.message?.includes('row-level security') || 
+                candidateError.message?.includes('permission denied') ||
+                candidateError.code === '42501') {
+              console.warn('⚠️ Le profil candidat n\'a pas pu être créé à cause des permissions, mais le compte est actif.');
+            } else if (candidateError.message?.includes('foreign key') ||
+                       candidateError.message?.includes('violates foreign key constraint')) {
+              // Erreur de clé étrangère - le profil n'existe toujours pas
+              throw new Error('Le profil utilisateur n\'a pas pu être créé. Veuillez réessayer ou contacter le support.');
+            } else {
+              // Pour les autres erreurs, on les propage
+              throw new Error(`Erreur lors de la création du profil candidat: ${candidateError.message}`);
+            }
+          } else {
+            console.log('✅ Profil candidat créé avec succès');
           }
-        } catch (candidateError) {
+        } catch (candidateError: any) {
           console.error('Erreur lors de la création du profil candidat:', candidateError);
+          // Si c'est une erreur RLS, on continue quand même
+          if (!candidateError.message?.includes('row-level security') && 
+              !candidateError.message?.includes('permission denied') &&
+              candidateError.code !== '42501' &&
+              !candidateError.message?.includes('foreign key')) {
+            throw candidateError;
+          }
         }
 
         // Envoyer l'email de bienvenue (désactivé temporairement pour éviter CORS)
@@ -247,20 +294,42 @@ const Register = () => {
         }, 2000);
       }
     } catch (error: any) {
-      console.error('Erreur lors de l\'inscription:', error);
+      console.error('Erreur lors de l\'inscription candidat:', error);
       
       let errorMessage = "Une erreur s'est produite lors de l'inscription.";
       
-      if (error.message.includes('already registered')) {
-        errorMessage = "Cet email est déjà associé à un compte.";
-      } else if (error.message.includes('Invalid email')) {
-        errorMessage = "Format d'email invalide.";
-      } else if (error.message.includes('Password should be at least')) {
-        errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
-      } else if (error.message.includes('Unable to validate email')) {
-        errorMessage = "Impossible de valider l'email. Vérifiez le format.";
-      } else if (error.message.includes('row-level security policy')) {
-        errorMessage = "Erreur de sécurité. Veuillez contacter l'administrateur.";
+      // Messages d'erreur plus spécifiques
+      if (error.message) {
+        if (error.message.includes('already registered') || 
+            error.message.includes('already exists') ||
+            error.message.includes('User already registered')) {
+          errorMessage = "Cet email est déjà associé à un compte. Essayez de vous connecter.";
+        } else if (error.message.includes('Invalid email') || 
+                   error.message.includes('invalid email')) {
+          errorMessage = "Format d'email invalide. Veuillez vérifier votre adresse email.";
+        } else if (error.message.includes('Password should be at least') ||
+                   error.message.includes('Password is too short')) {
+          errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
+        } else if (error.message.includes('Unable to validate email')) {
+          errorMessage = "Impossible de valider l'email. Vérifiez le format de votre adresse.";
+        } else if (error.message.includes('row-level security') ||
+                   error.message.includes('permission denied') ||
+                   error.message.includes('RLS policy') ||
+                   error.code === '42501') {
+          errorMessage = "Erreur de permissions. Veuillez contacter le support technique.";
+        } else if (error.message.includes('foreign key') ||
+                   error.message.includes('violates foreign key constraint') ||
+                   error.code === '23503') {
+          errorMessage = "Erreur lors de la création du profil. Le compte a été créé mais le profil n'a pas pu être initialisé. Veuillez vous connecter et compléter votre profil.";
+        } else if (error.message.includes('network') ||
+                   error.message.includes('fetch')) {
+          errorMessage = "Erreur de connexion. Vérifiez votre connexion internet et réessayez.";
+        } else {
+          // Afficher le message d'erreur original si disponible
+          errorMessage = error.message || errorMessage;
+        }
+      } else if (error.error_description) {
+        errorMessage = error.error_description;
       }
 
       toast({
@@ -303,9 +372,33 @@ const Register = () => {
       }
 
       if (authData.user) {
-        // Le profil utilisateur sera créé automatiquement par le trigger PostgreSQL
-        // Pas besoin de l'insérer manuellement
-        console.log('✅ Utilisateur créé, profil sera synchronisé automatiquement');
+        // Créer le profil utilisateur directement (sans attendre le trigger)
+        console.log('✅ Utilisateur créé, création du profil...');
+        
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            user_id: authData.user.id,
+            email: companyData.email,
+            first_name: companyData.companyName,
+            last_name: 'Entreprise',
+            user_type: 'company',
+            is_active: true,
+            email_verified: false
+          }]);
+
+        if (profileError) {
+          // Si l'erreur indique que le profil existe déjà (créé par le trigger), c'est OK
+          if (profileError.message?.includes('duplicate key') || 
+              profileError.code === '23505') {
+            console.log('✅ Profil déjà créé par le trigger');
+          } else {
+            console.error('Erreur création profil:', profileError);
+            throw new Error(`Erreur lors de la création du profil: ${profileError.message}`);
+          }
+        } else {
+          console.log('✅ Profil créé avec succès');
+        }
 
         // Créer le profil entreprise
         try {
@@ -320,10 +413,30 @@ const Register = () => {
 
           if (companyError) {
             console.error('Erreur profil entreprise:', companyError);
-            // Continuer même si le profil entreprise échoue
+            // Si l'erreur est liée à RLS, on continue quand même
+            if (companyError.message?.includes('row-level security') || 
+                companyError.message?.includes('permission denied') ||
+                companyError.code === '42501') {
+              console.warn('⚠️ Le profil entreprise n\'a pas pu être créé à cause des permissions, mais le compte est actif.');
+            } else if (companyError.message?.includes('foreign key') ||
+                       companyError.message?.includes('violates foreign key constraint')) {
+              // Erreur de clé étrangère - le profil n'existe toujours pas
+              throw new Error('Le profil utilisateur n\'a pas pu être créé. Veuillez réessayer ou contacter le support.');
+            } else {
+              throw new Error(`Erreur lors de la création du profil entreprise: ${companyError.message}`);
+            }
+          } else {
+            console.log('✅ Profil entreprise créé avec succès');
           }
-        } catch (companyError) {
+        } catch (companyError: any) {
           console.error('Erreur lors de la création du profil entreprise:', companyError);
+          // Si c'est une erreur RLS, on continue quand même
+          if (!companyError.message?.includes('row-level security') && 
+              !companyError.message?.includes('permission denied') &&
+              companyError.code !== '42501' &&
+              !companyError.message?.includes('foreign key')) {
+            throw companyError;
+          }
         }
 
         // Envoyer l'email de bienvenue (désactivé temporairement pour éviter CORS)
@@ -355,20 +468,42 @@ const Register = () => {
         }, 2000);
       }
     } catch (error: any) {
-      console.error('Erreur lors de l\'inscription:', error);
+      console.error('Erreur lors de l\'inscription entreprise:', error);
       
       let errorMessage = "Une erreur s'est produite lors de l'inscription.";
       
-      if (error.message.includes('already registered')) {
-        errorMessage = "Cet email est déjà associé à un compte.";
-      } else if (error.message.includes('Invalid email')) {
-        errorMessage = "Format d'email invalide.";
-      } else if (error.message.includes('Password should be at least')) {
-        errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
-      } else if (error.message.includes('Unable to validate email')) {
-        errorMessage = "Impossible de valider l'email. Vérifiez le format.";
-      } else if (error.message.includes('row-level security policy')) {
-        errorMessage = "Erreur de sécurité. Veuillez contacter l'administrateur.";
+      // Messages d'erreur plus spécifiques
+      if (error.message) {
+        if (error.message.includes('already registered') || 
+            error.message.includes('already exists') ||
+            error.message.includes('User already registered')) {
+          errorMessage = "Cet email est déjà associé à un compte. Essayez de vous connecter.";
+        } else if (error.message.includes('Invalid email') || 
+                   error.message.includes('invalid email')) {
+          errorMessage = "Format d'email invalide. Veuillez vérifier votre adresse email.";
+        } else if (error.message.includes('Password should be at least') ||
+                   error.message.includes('Password is too short')) {
+          errorMessage = "Le mot de passe doit contenir au moins 6 caractères.";
+        } else if (error.message.includes('Unable to validate email')) {
+          errorMessage = "Impossible de valider l'email. Vérifiez le format de votre adresse.";
+        } else if (error.message.includes('row-level security') ||
+                   error.message.includes('permission denied') ||
+                   error.message.includes('RLS policy') ||
+                   error.code === '42501') {
+          errorMessage = "Erreur de permissions. Veuillez contacter le support technique.";
+        } else if (error.message.includes('foreign key') ||
+                   error.message.includes('violates foreign key constraint') ||
+                   error.code === '23503') {
+          errorMessage = "Erreur lors de la création du profil. Le compte a été créé mais le profil n'a pas pu être initialisé. Veuillez vous connecter et compléter votre profil.";
+        } else if (error.message.includes('network') ||
+                   error.message.includes('fetch')) {
+          errorMessage = "Erreur de connexion. Vérifiez votre connexion internet et réessayez.";
+        } else {
+          // Afficher le message d'erreur original si disponible
+          errorMessage = error.message || errorMessage;
+        }
+      } else if (error.error_description) {
+        errorMessage = error.error_description;
       }
 
       toast({

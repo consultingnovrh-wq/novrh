@@ -6,6 +6,13 @@ const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+const generateSecurePassword = () => {
+  const randomPart = Math.random().toString(36).slice(-8);
+  return `NovRH-${Date.now().toString(36)}-${randomPart}!`;
+};
+
+const ADMIN_PASSWORD = (process.env.ADMIN_INITIAL_PASSWORD || "").trim() || generateSecurePassword();
+
 async function createAdminAccount() {
   try {
     console.log('🚀 Création du compte administrateur...');
@@ -13,7 +20,7 @@ async function createAdminAccount() {
     // 1. Créer l'utilisateur dans Auth avec la clé service
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: 'admin@novrh.com',
-      password: 'admin123456',
+      password: ADMIN_PASSWORD,
       email_confirm: true,
       user_metadata: {
         first_name: 'Admin',
@@ -98,11 +105,13 @@ async function createAdminAccount() {
     }
 
     // 5. Créer l'entrée dans la table administrators
-    const { data: adminRole, error: roleError } = await supabase
+    let adminRole = null;
+    const { data: adminRoleData, error: roleError } = await supabase
       .from('admin_roles')
       .select('id')
       .eq('name', 'super_admin')
       .single();
+    adminRole = adminRoleData;
 
     if (roleError || !adminRole) {
       console.warn('⚠️ Rôle super_admin non trouvé, création...');
@@ -134,12 +143,16 @@ async function createAdminAccount() {
       adminRole = newRole;
     }
 
+    if (!adminRole) {
+      throw new Error('Impossible de récupérer le rôle super_admin');
+    }
+
     // 6. Ajouter l'utilisateur à la table administrators
     const { data: adminEntry, error: adminError } = await supabase
       .from('administrators')
       .insert({
         user_id: authData.user.id,
-        role_id: adminRole.id,
+        role_id: adminRole?.id,
         is_active: true
       })
       .select()
@@ -153,7 +166,7 @@ async function createAdminAccount() {
 
     console.log('\n🎉 COMPTE ADMINISTRATEUR CRÉÉ AVEC SUCCÈS !');
     console.log('📧 Email:', 'admin@novrh.com');
-    console.log('🔑 Mot de passe:', 'admin123456');
+    console.log('🔑 Mot de passe:', ADMIN_PASSWORD);
     console.log('🆔 ID utilisateur:', authData.user.id);
     console.log('👑 Rôle: Super Administrateur');
     console.log('\n🌐 Accès au dashboard: http://localhost:8081/admin');

@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import CookieBanner from "@/components/CookieBanner";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Services from "./pages/Services";
@@ -48,6 +49,8 @@ import Reviews from "./pages/Reviews";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Legal from "./pages/Legal";
+import CookiePolicy from "./pages/CookiePolicy";
+import CookieManagement from "./pages/CookieManagement";
 import Team from "./pages/Team";
 import NotFound from "./pages/NotFound";
 
@@ -59,6 +62,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <CookieBanner />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
@@ -99,6 +103,8 @@ const App = () => (
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/legal" element={<Legal />} />
+          <Route path="/cookies" element={<CookiePolicy />} />
+          <Route path="/cookie-management" element={<CookieManagement />} />
           
           {/* Routes d'administration */}
           <Route path="/admin" element={<AdminDashboard />} />

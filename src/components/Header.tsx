@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown, ChevronRight, Crown, Star, Building2, User } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronRight, Crown, Star, Building2, User, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useDynamicActions } from "@/hooks/use-dynamic-actions";
@@ -256,8 +256,18 @@ const Header = () => {
                                 </>
                               ) : (
                                 <>
-                                  <User className="w-4 h-4 text-gray-600" />
-                                  <span className="text-sm font-medium text-gray-900">Plan Gratuit</span>
+                                  {userType === 'admin' && <Shield className="w-4 h-4 text-red-600" />}
+                                  {userType === 'company' && <Building2 className="w-4 h-4 text-blue-600" />}
+                                  {userType === 'candidate' && <User className="w-4 h-4 text-green-600" />}
+                                  {userType === 'student' && <User className="w-4 h-4 text-purple-600" />}
+                                  {(!userType || (userType !== 'admin' && userType !== 'company' && userType !== 'candidate' && userType !== 'student')) && <User className="w-4 h-4 text-gray-600" />}
+                                  <span className="text-sm font-medium text-gray-900">
+                                    {userType === 'admin' ? 'Administrateur' : 
+                                     userType === 'company' ? 'Entreprise' : 
+                                     userType === 'candidate' ? 'Candidat' : 
+                                     userType === 'student' ? 'Étudiant' : 
+                                     'Utilisateur'}
+                                  </span>
                                 </>
                               )}
                             </div>
