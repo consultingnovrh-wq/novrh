@@ -54,8 +54,8 @@ const CookieBanner = () => {
           <CardContent className="p-6">
             {/* Logo en haut à droite */}
             <div className="absolute top-4 right-4">
-              <div className="w-12 h-12 bg-yellow-400 rounded flex items-center justify-center">
-                <Cookie className="h-6 w-6 text-black" />
+              <div className="w-12 h-12 bg-[#00167a] rounded flex items-center justify-center shadow-lg">
+                <Cookie className="h-6 w-6 text-white" />
               </div>
             </div>
 
@@ -98,7 +98,7 @@ const CookieBanner = () => {
               </Button>
               <Button
                 onClick={handleAcceptAll}
-                className="bg-yellow-400 hover:bg-yellow-300 text-black"
+                className="bg-[#00167a] hover:bg-[#00167a]/90 text-white border-none shadow-md"
               >
                 OK pour moi
               </Button>

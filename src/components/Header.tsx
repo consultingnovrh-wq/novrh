@@ -14,12 +14,13 @@ import {
 } from "@/components/ui/navigation-menu";
 import logo from "@/assets/logo.png";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerClose,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -98,6 +99,11 @@ const Header = () => {
 
   const toggleSubmenu = (menuName: string) => {
     setOpenSubmenu(openSubmenu === menuName ? null : menuName);
+  };
+
+  const handleCloseMenu = () => {
+    setIsMenuOpen(false);
+    setOpenSubmenu(null);
   };
 
   return (
@@ -327,55 +333,71 @@ const Header = () => {
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            <Drawer>
-              <DrawerTrigger asChild>
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
                 <Button
                   variant="default"
                   size="icon"
                   className="bg-[#00167a] text-white hover:bg-[#00167a]/90 border-none shadow-none"
                 >
-                  <Menu className="h-6 w-6" />
+                  {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </Button>
-              </DrawerTrigger>
-              <DrawerContent className="bg-[#00167a] text-white rounded-t-2xl p-0">
-                <DrawerHeader className="flex flex-row items-center justify-between px-4 pt-4 pb-2">
+              </SheetTrigger>
+              <SheetContent
+                side="left"
+                className="bg-[#00167a] text-white p-0 w-full max-w-xs"
+              >
+                <SheetHeader className="px-4 pt-6 pb-4 text-left border-b border-white/10">
                   <div className="flex items-center">
-                    <img src={logo} alt="NovRH CONSULTING Logo" className="h-12 w-auto" />
-                    <span className="ml-3 text-white font-semibold">Bienvenue</span>
+                    <img src={logo} alt="NovRH CONSULTING Logo" className="h-10 w-auto" />
+                    <div className="ml-3">
+                      <SheetTitle className="text-white text-base">Menu principal</SheetTitle>
+                      <SheetDescription className="text-white/70">
+                        Accédez à toutes les sections
+                      </SheetDescription>
+                    </div>
                   </div>
-                  <DrawerClose asChild>
-                    <Button variant="ghost" size="icon" className="text-white">
-                      <X className="h-6 w-6" />
-                    </Button>
-                  </DrawerClose>
-                </DrawerHeader>
-                <nav className="flex flex-col gap-1 px-4 pb-4">
-                  <a href="/" className="text-base font-medium text-white hover:bg-primary/80 px-3 py-2 rounded transition-colors">ACCUEIL</a>
-                  <a href="/pricing" className="text-base font-medium text-white hover:bg-primary/80 px-3 py-2 rounded transition-colors">TARIFICATION</a>
-                  
+                </SheetHeader>
+                <nav className="flex flex-col gap-1 px-4 py-4 overflow-y-auto">
+                  <a
+                    href="/"
+                    onClick={handleCloseMenu}
+                    className="text-base font-medium text-white hover:bg-white/10 px-3 py-2 rounded transition-colors"
+                  >
+                    ACCUEIL
+                  </a>
+                  <a
+                    href="/pricing"
+                    onClick={handleCloseMenu}
+                    className="text-base font-medium text-white hover:bg-white/10 px-3 py-2 rounded transition-colors"
+                  >
+                    TARIFICATION
+                  </a>
+
                   {mobileMenuItems.map((item) => (
                     <div key={item.name}>
                       <button
                         onClick={() => toggleSubmenu(item.name)}
-                        className="w-full text-left text-base font-medium text-white hover:bg-primary/80 px-3 py-2 rounded transition-colors flex items-center justify-between"
+                        className="w-full text-left text-base font-medium text-white hover:bg-white/10 px-3 py-2 rounded transition-colors flex items-center justify-between"
                       >
                         {item.name}
                         {item.submenu && (
-                          <ChevronRight 
+                          <ChevronRight
                             className={`h-4 w-4 transition-transform ${
-                              openSubmenu === item.name ? 'rotate-90' : ''
+                              openSubmenu === item.name ? "rotate-90" : ""
                             }`}
                           />
                         )}
                       </button>
-                      
+
                       {item.submenu && openSubmenu === item.name && (
                         <div className="ml-4 mt-1 space-y-1">
                           {item.submenu.map((subItem) => (
                             <a
                               key={subItem.name}
                               href={subItem.href}
-                              className="block text-sm text-white/90 hover:bg-primary/60 px-3 py-2 rounded transition-colors"
+                              onClick={handleCloseMenu}
+                              className="block text-sm text-white/90 hover:bg-white/15 px-3 py-2 rounded transition-colors"
                             >
                               {subItem.name}
                             </a>
@@ -384,15 +406,63 @@ const Header = () => {
                       )}
                     </div>
                   ))}
-                  
-                  <div className="pt-4 flex flex-col gap-2">
-                    <Button variant="default" size="sm" className="w-full bg-white text-[#00167a] hover:bg-[#00167a] hover:text-white border-none shadow-none" asChild>
-                      <a href="/login">Mon Compte</a>
-                    </Button>
+
+                  <div className="pt-4 flex flex-col gap-2 border-t border-white/10 mt-4">
+                    {user ? (
+                      <>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full bg-white text-[#00167a] hover:bg-white/90"
+                          onClick={() => {
+                            handleDashboard();
+                            handleCloseMenu();
+                          }}
+                        >
+                          Tableau de bord
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full bg-white text-[#00167a] hover:bg-white/90"
+                          onClick={() => {
+                            handleLogout();
+                            handleCloseMenu();
+                          }}
+                        >
+                          Se déconnecter
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full bg-white text-[#00167a] hover:bg-white/90"
+                          onClick={() => {
+                            handleLogin();
+                            handleCloseMenu();
+                          }}
+                        >
+                          Se connecter
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full bg-white text-[#00167a] hover:bg-white/90"
+                          onClick={() => {
+                            handleRegister();
+                            handleCloseMenu();
+                          }}
+                        >
+                          S'inscrire
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </nav>
-              </DrawerContent>
-            </Drawer>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
