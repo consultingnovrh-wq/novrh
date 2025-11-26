@@ -20,6 +20,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 
 const Header = () => {
@@ -332,27 +333,29 @@ const Header = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center">
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <Button
-                variant="default"
-                size="icon"
-                className="bg-[#00167a] text-white hover:bg-[#00167a]/90 border-none shadow-none"
-                onClick={() => setIsMenuOpen(true)}
-              >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </Button>
+              <SheetTrigger asChild>
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="bg-[#00167a] text-white hover:bg-[#00167a]/90 border-none shadow-none h-10 w-10"
+                  aria-label="Ouvrir le menu"
+                >
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
               <SheetContent
                 side="left"
-                className="bg-[#00167a] text-white p-0 w-full max-w-xs"
+                className="bg-[#00167a] text-white p-0 w-full max-w-xs z-[60] flex flex-col"
               >
-                <SheetHeader className="px-4 pt-6 pb-4 border-b border-white/10">
+                <SheetHeader className="px-4 pt-6 pb-4 border-b border-white/10 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <img src={logo} alt="NovRH CONSULTING Logo" className="h-10 w-auto" />
                       <div className="ml-3">
                         <SheetTitle className="text-white text-base">Menu principal</SheetTitle>
-                        <SheetDescription className="text-white/70">
+                        <SheetDescription className="text-white/70 text-xs">
                           Accédez à toutes les sections
                         </SheetDescription>
                       </div>
@@ -361,7 +364,7 @@ const Header = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="text-white hover:bg-white/10"
+                        className="text-white hover:bg-white/10 h-8 w-8"
                         onClick={handleCloseMenu}
                       >
                         <X className="h-5 w-5" />
@@ -369,7 +372,7 @@ const Header = () => {
                     </SheetClose>
                   </div>
                 </SheetHeader>
-                <nav className="flex flex-col gap-1 px-4 py-4 overflow-y-auto">
+                <nav className="flex flex-col gap-1 px-4 py-4 overflow-y-auto flex-1">
                   <a
                     href="/"
                     onClick={handleCloseMenu}
