@@ -15,11 +15,11 @@ import {
 import logo from "@/assets/logo.png";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 
 const Header = () => {
@@ -334,28 +334,39 @@ const Header = () => {
           {/* Mobile menu button */}
           <div className="md:hidden">
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="default"
-                  size="icon"
-                  className="bg-[#00167a] text-white hover:bg-[#00167a]/90 border-none shadow-none"
-                >
-                  {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-                </Button>
-              </SheetTrigger>
+              <Button
+                variant="default"
+                size="icon"
+                className="bg-[#00167a] text-white hover:bg-[#00167a]/90 border-none shadow-none"
+                onClick={() => setIsMenuOpen(true)}
+              >
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
               <SheetContent
                 side="left"
                 className="bg-[#00167a] text-white p-0 w-full max-w-xs"
               >
-                <SheetHeader className="px-4 pt-6 pb-4 text-left border-b border-white/10">
-                  <div className="flex items-center">
-                    <img src={logo} alt="NovRH CONSULTING Logo" className="h-10 w-auto" />
-                    <div className="ml-3">
-                      <SheetTitle className="text-white text-base">Menu principal</SheetTitle>
-                      <SheetDescription className="text-white/70">
-                        Accédez à toutes les sections
-                      </SheetDescription>
+                <SheetHeader className="px-4 pt-6 pb-4 border-b border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <img src={logo} alt="NovRH CONSULTING Logo" className="h-10 w-auto" />
+                      <div className="ml-3">
+                        <SheetTitle className="text-white text-base">Menu principal</SheetTitle>
+                        <SheetDescription className="text-white/70">
+                          Accédez à toutes les sections
+                        </SheetDescription>
+                      </div>
                     </div>
+                    <SheetClose asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-white hover:bg-white/10"
+                        onClick={handleCloseMenu}
+                      >
+                        <X className="h-5 w-5" />
+                      </Button>
+                    </SheetClose>
                   </div>
                 </SheetHeader>
                 <nav className="flex flex-col gap-1 px-4 py-4 overflow-y-auto">
